@@ -1,7 +1,6 @@
 # SkinClash ✨ – Skincare Ingredient Conflict Checker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Buy Me a Coffee](https://img.shields.io/badge/☕️-Buy%20me%20a%20coffee-orange)](https://www.buymeacoffee.com/YOUR_ID)
 
 **Stop layering ingredients that hate each other.**  
 SkinClash instantly checks if your skincare products contain conflicting active ingredients, so you can protect your skin barrier without a science degree.
