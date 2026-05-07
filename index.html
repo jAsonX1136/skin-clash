@@ -504,8 +504,14 @@
                         });
                     },
                     onError: function(err) {
-                        console.error('PayPal error:', err);
-                        alert('Oops, something went wrong. Please try again.');
+                        console.error('PayPal error:', JSON.stringify(err, null, 2));
+                        let errorMsg = 'Payment failed. ';
+                        if (err && err.message) {
+                            errorMsg += 'Reason: ' + err.message;
+                        } else {
+                            errorMsg += 'Please try again later.';
+                        }
+                        alert(errorMsg);
                     }
                 }).render('#paypal-button-container');
             }
