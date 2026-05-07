@@ -92,15 +92,9 @@ Check [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines (once you add one).
 
 If SkinClash saved your skin (or at least stopped you from googling “can I mix…” at midnight), consider:
 
-- **Support me on Ko-fi(https://ko-fi.com/skinclash)**
+- **Support me on Ko-fi (https://ko-fi.com/skinclash)**
 - **Sharing it** with your skincare‑obsessed friends 💚  
 - **Starring this repo** ⭐ – it helps more people find it
-
----
-
-## 📄 License
-
-MIT © [Your Name or Handle]
 
 ---
 
