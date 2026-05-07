@@ -24,7 +24,7 @@ It's like a skin‑savvy friend who’s always in your pocket.
 
 ## 🚀 Live demo
 
-👉 **[Open SkinClash]()**  
+👉 **[Open SkinClash]**  
 *(https://jasonx1136.github.io/skin-clash/)*
 
 No installation, no sign‑up. Just open the link and start checking.
