@@ -74,42 +74,7 @@
             letter-spacing: 0.8px;
             color: var(--text-light);
             margin: 20px 0 10px;
-        .support-section {
-            text-align: center;
-            margin-top: 28px;
-            border-top: 1px dashed var(--border);
-            padding-top: 22px;
         }
-            .amount-buttons {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-                margin: 12px 0 6px;
-        }
-            .amount-btn {
-                padding: 10px 20px;
-                border-radius: 40px;
-                border: 2px solid #e0dcd4;
-                background: #fff;
-                font-size: 16px;
-                font-weight: 600;
-                color: #3e4a3c;
-                cursor: pointer;
-                transition: all 0.2s;
-        }
-            .amount-btn.active {
-                background: #a3b18a;
-                border-color: #a3b18a;
-                color: white;
-        }
-            .amount-btn:hover {
-                border-color: #a3b18a;
-        }
-            #paypal-button-container {
-                margin-top: 16px;
-                min-height: 45px;
-        }
-        /* 成分选择标签云 */
         .ingredient-cloud {
             display: flex;
             flex-wrap: wrap;
@@ -183,7 +148,6 @@
             box-shadow: 0 10px 18px -8px rgba(163, 177, 138, 0.4);
         }
         .action-btn:active { transform: scale(0.97); }
-        /* 结果区域 */
         .result-card {
             background: #fbfcf9;
             border-radius: 22px;
@@ -233,24 +197,39 @@
             padding-top: 22px;
         }
         .support-section p {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-light);
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
-        .coffee-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #FF813F;
-            color: white;
-            padding: 12px 24px;
+        .amount-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 12px 0 6px;
+        }
+        .amount-btn {
+            padding: 10px 20px;
             border-radius: 40px;
-            text-decoration: none;
+            border: 2px solid #e0dcd4;
+            background: #fff;
+            font-size: 16px;
             font-weight: 600;
-            font-size: 15px;
-            transition: 0.2s;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .no-conflict-emoji { font-size: 28px; }
+        .amount-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .amount-btn:hover {
+            border-color: var(--primary);
+        }
+        #paypal-button-container {
+            margin-top: 16px;
+            min-height: 45px;
+        }
         hr { border: 0.5px solid var(--border); margin: 18px 0; }
     </style>
 </head>
@@ -264,7 +243,7 @@
 
         <div class="section-label">🔬 Select your ingredients</div>
         <div class="ingredient-cloud" id="chipContainer">
-            <!-- 动态生成 chips -->
+            <!-- 动态生成成分标签 -->
         </div>
 
         <div class="manual-input-area">
@@ -278,17 +257,21 @@
             <!-- 结果动态插入 -->
         </div>
 
-       <div class="support-section">
-    <p>💚 If this tool saved your skin, buy me a coffee ☕️</p>
-    <div class="amount-buttons">
-        <button class="amount-btn" data-amount="3.00">$3</button>
-        <button class="amount-btn active" data-amount="5.00">$5</button>
-        <button class="amount-btn" data-amount="10.00">$10</button>
+        <!-- 支持区域：金额选择 + PayPal 按钮 -->
+        <div class="support-section">
+            <p>💚 If this tool saved your skin, buy me a coffee ☕️</p>
+            <div class="amount-buttons">
+                <button class="amount-btn" data-amount="3.00">$3</button>
+                <button class="amount-btn active" data-amount="5.00">$5</button>
+                <button class="amount-btn" data-amount="10.00">$10</button>
+            </div>
+            <p style="font-size: 13px; color: #888; margin: 8px 0 12px;">or pay any amount via PayPal</p>
+            <div id="paypal-button-container"></div>
+        </div>
     </div>
-    <p style="font-size: 13px; color: #888; margin: 8px 0 12px;">or pay any amount via PayPal</p>
-    <!-- PayPal 按钮容器 -->
-    <div id="paypal-button-container"></div>
-</div>
+
+    <!-- PayPal SDK（已嵌入你的 Client ID） -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AbaPd-hgUjdnOtzDEFHwOxcmtvyCMijVu4lYRLURSraEZLaNoAW48Eqp4KsLS2nfNErjOqGsQZAYjY_k&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
 
     <script>
         // ==================== 护肤成分数据库 ====================
@@ -307,7 +290,6 @@
             { id: 'peptide', name: 'Matrixyl (Peptides)', category: 'Firming' }
         ];
 
-        // 冲突规则
         const conflictRules = [
             {
                 pair: ['retinol', 'aha'],
@@ -342,7 +324,7 @@
             {
                 pair: ['copperPeptide', 'vitaminC'],
                 severity: 'Medium',
-                description: 'Vitamin C can be oxidized by copper peptides, reducing their anti-aging benefits. Alternate between AM and PM.'
+                description: 'Vitamin C can oxidize copper peptides, reducing their anti-aging benefits. Alternate between AM and PM.'
             },
             {
                 pair: ['aha', 'bha'],
@@ -357,8 +339,14 @@
         ];
 
         let selectedIngredients = new Set();
+        window._customNames = {};
 
-        // 渲染成分 cloud
+        function getIngredientName(id) {
+            if (window._customNames && window._customNames[id]) return window._customNames[id];
+            const found = ingredientList.find(i => i.id === id);
+            return found ? found.name : id;
+        }
+
         function renderChips() {
             const container = document.getElementById('chipContainer');
             container.innerHTML = '';
@@ -378,49 +366,7 @@
                 });
                 container.appendChild(chip);
             });
-        }
-
-        // 手动添加自定义成分（不在列表里的，仅用于检测匹配？简单处理，加入一个临时id）
-        function addCustomIngredient() {
-            const input = document.getElementById('customIngredient');
-            const name = input.value.trim();
-            if (name === '') return;
-            // 生成一个简单id
-            const customId = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (!selectedIngredients.has(customId)) {
-                selectedIngredients.add(customId);
-                // 临时存储名称映射
-                if (!window._customNames) window._customNames = {};
-                window._customNames[customId] = name;
-                renderChips();
-                // 额外显示一个标签？这里简单，重新渲染时需处理自定义显示。我们维持一个全局映射
-            }
-            input.value = '';
-            clearResult();
-        }
-
-        // 改写 renderChips 以支持显示自定义成分
-        function renderChips() {
-            const container = document.getElementById('chipContainer');
-            container.innerHTML = '';
-            // 显示预定义成分
-            ingredientList.forEach(ing => {
-                const chip = document.createElement('div');
-                chip.className = `chip${selectedIngredients.has(ing.id) ? ' selected' : ''}`;
-                chip.textContent = ing.name;
-                chip.dataset.id = ing.id;
-                chip.addEventListener('click', () => {
-                    if (selectedIngredients.has(ing.id)) {
-                        selectedIngredients.delete(ing.id);
-                    } else {
-                        selectedIngredients.add(ing.id);
-                    }
-                    renderChips();
-                    clearResult();
-                });
-                container.appendChild(chip);
-            });
-            // 显示手动添加的成分
+            // 显示自定义成分
             if (window._customNames) {
                 Object.keys(window._customNames).forEach(customId => {
                     if (selectedIngredients.has(customId)) {
@@ -440,10 +386,18 @@
             }
         }
 
-        function getIngredientName(id) {
-            if (window._customNames && window._customNames[id]) return window._customNames[id];
-            const found = ingredientList.find(i => i.id === id);
-            return found ? found.name : id;
+        function addCustomIngredient() {
+            const input = document.getElementById('customIngredient');
+            const name = input.value.trim();
+            if (name === '') return;
+            const customId = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!selectedIngredients.has(customId)) {
+                selectedIngredients.add(customId);
+                window._customNames[customId] = name;
+                renderChips();
+            }
+            input.value = '';
+            clearResult();
         }
 
         function clearResult() {
@@ -456,31 +410,25 @@
                 resultDiv.innerHTML = `<div class="result-card"><span style="color:#888;">Select at least two ingredients to check.</span></div>`;
                 return;
             }
-
             const ids = Array.from(selectedIngredients);
             const conflictsFound = [];
-
-            // 双重循环检查规则
             for (let i = 0; i < ids.length; i++) {
-                for (let j = i+1; j < ids.length; j++) {
+                for (let j = i + 1; j < ids.length; j++) {
                     const a = ids[i];
                     const b = ids[j];
                     for (const rule of conflictRules) {
-                        if ((rule.pair[0] === a && rule.pair[1] === b) ||
-                            (rule.pair[0] === b && rule.pair[1] === a)) {
+                        if ((rule.pair[0] === a && rule.pair[1] === b) || (rule.pair[0] === b && rule.pair[1] === a)) {
                             conflictsFound.push({
                                 ingredientA: getIngredientName(a),
                                 ingredientB: getIngredientName(b),
                                 severity: rule.severity,
                                 description: rule.description
                             });
-                            break; // 每对只匹配一条规则
+                            break;
                         }
                     }
                 }
             }
-
-            // 渲染结果
             let html = '<div class="result-card">';
             if (conflictsFound.length === 0) {
                 html += `<div class="safe-badge"><span class="no-conflict-emoji">🛡️</span> No conflicts detected!</div>`;
@@ -506,10 +454,64 @@
             if (e.key === 'Enter') addCustomIngredient();
         });
         document.getElementById('checkBtn').addEventListener('click', checkConflicts);
-
-        // 初始渲染
-        window._customNames = {};
         renderChips();
+
+        // ==================== PayPal 按钮逻辑 ====================
+        (function() {
+            let currentAmount = '5.00';
+            const paypalContainer = document.getElementById('paypal-button-container');
+
+            // 金额按钮切换
+            document.querySelectorAll('.amount-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentAmount = this.dataset.amount;
+                    if (paypalContainer.innerHTML) {
+                        renderPaypalButton();
+                    }
+                });
+            });
+
+            function renderPaypalButton() {
+                paypalContainer.innerHTML = '';
+                if (typeof paypal === 'undefined') {
+                    paypalContainer.innerHTML = '<p style="color:#c97c5b;">⚠️ PayPal not loaded. Please refresh.</p>';
+                    return;
+                }
+                paypal.Buttons({
+                    style: {
+                        layout: 'vertical',
+                        color: 'gold',
+                        shape: 'pill',
+                        label: 'paypal'
+                    },
+                    createOrder: function(data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                description: 'Support SkinClash',
+                                amount: {
+                                    currency_code: 'USD',
+                                    value: currentAmount
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            const name = details.payer.name.given_name || 'friend';
+                            alert('Thank you so much, ' + name + '! ☕️ Your support means the world.');
+                        });
+                    },
+                    onError: function(err) {
+                        console.error('PayPal error:', err);
+                        alert('Oops, something went wrong. Please try again.');
+                    }
+                }).render('#paypal-button-container');
+            }
+
+            renderPaypalButton();
+        })();
     </script>
 </body>
 </html>
