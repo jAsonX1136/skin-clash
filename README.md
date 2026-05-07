@@ -36,8 +36,6 @@ No installation, no sign‑up. Just open the link and start checking.
 |-------------|---------------|
 | ![Main interface](screenshots/main.png) | ![Conflict detected](screenshots/result.png) |
 
-*(You can add real screenshots later – they help a lot on Product Hunt and GitHub.)*
-
 ---
 
 ## 🛠️ How to use
