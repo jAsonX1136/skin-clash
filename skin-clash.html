@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>SkinClash ✨ Ingredient Conflict Checker</title>
+    <style>
+        :root {
+            --bg: #fcf9f5;
+            --card-bg: #ffffff;
+            --primary: #a3b18a;
+            --primary-soft: #d4ddc6;
+            --danger: #c97c5b;
+            --danger-soft: #fbe9e4;
+            --text: #3e4a3c;
+            --text-light: #6b705c;
+            --border: #e6e3da;
+            --shadow: 0 4px 20px rgba(0,0,0,0.04);
+            --radius: 22px;
+            --radius-sm: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'PingFang SC', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 28px 22px 32px;
+            background: var(--card-bg);
+            border-radius: 36px;
+            box-shadow: var(--shadow);
+            margin: 15px 0;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        .logo-icon {
+            font-size: 38px;
+            background: var(--primary-soft);
+            width: 56px; height: 56px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 26px;
+            font-weight: 650;
+            letter-spacing: -0.5px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 28px;
+            margin-top: 4px;
+        }
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-light);
+            margin: 20px 0 10px;
+        }
+        /* 成分选择标签云 */
+        .ingredient-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .chip {
+            background: #f4f6f0;
+            border: 1.5px solid transparent;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .chip.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            font-weight: 550;
+            box-shadow: 0 4px 10px rgba(163, 177, 138, 0.3);
+        }
+        .chip:hover { border-color: var(--primary); }
+        .chip.selected:hover { background: #92a17a; }
+        .manual-input-area {
+            display: flex;
+            gap: 10px;
+            margin: 8px 0 12px;
+        }
+        #customIngredient {
+            flex: 1;
+            padding: 13px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 40px;
+            font-size: 15px;
+            outline: none;
+            background: #fefefe;
+            transition: 0.2s;
+        }
+        #customIngredient:focus { border-color: var(--primary); }
+        #addCustomBtn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 0 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-size: 17px;
+            font-weight: 650;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 18px 0 22px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 10px 18px -8px rgba(163, 177, 138, 0.4);
+        }
+        .action-btn:active { transform: scale(0.97); }
+        /* 结果区域 */
+        .result-card {
+            background: #fbfcf9;
+            border-radius: 22px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin: 12px 0 16px;
+        }
+        .conflict-item {
+            background: var(--danger-soft);
+            border-left: 5px solid var(--danger);
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+        .conflict-pair {
+            font-weight: 700;
+            font-size: 16px;
+            color: #884433;
+            margin-bottom: 4px;
+        }
+        .conflict-desc {
+            font-size: 14px;
+            color: #5f4b44;
+            line-height: 1.4;
+        }
+        .safe-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #4a6b40;
+            font-size: 16px;
+            padding: 8px 0;
+        }
+        .tip-text {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 8px;
+            line-height: 1.5;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+        .support-section {
+            text-align: center;
+            margin-top: 28px;
+            border-top: 1px dashed var(--border);
+            padding-top: 22px;
+        }
+        .support-section p {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+        .coffee-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #FF813F;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        .no-conflict-emoji { font-size: 28px; }
+        hr { border: 0.5px solid var(--border); margin: 18px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-icon">🧴</div>
+            <h1>SkinClash</h1>
+        </div>
+        <div class="subtitle">Instantly check if your skincare ingredients clash.<br>Save your skin barrier. ✨</div>
+
+        <div class="section-label">🔬 Select your ingredients</div>
+        <div class="ingredient-cloud" id="chipContainer">
+            <!-- 动态生成 chips -->
+        </div>
+
+        <div class="manual-input-area">
+            <input type="text" id="customIngredient" placeholder="Or type any ingredient...">
+            <button id="addCustomBtn">Add</button>
+        </div>
+
+        <button class="action-btn" id="checkBtn">⚡ Check for Conflicts</button>
+
+        <div id="resultArea">
+            <!-- 结果动态插入 -->
+        </div>
+
+        <div class="support-section">
+            <p>💚 If this tool saved your skin, support it with a coffee.</p>
+            <a class="coffee-btn" href="https://www.buymeacoffee.com/YOUR_ID" target="_blank">
+                ☕️ Buy me a matcha latte
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 护肤成分数据库 ====================
+        const ingredientList = [
+            { id: 'retinol', name: 'Retinol (Vitamin A)', category: 'Anti-aging' },
+            { id: 'aha', name: 'Glycolic Acid (AHA)', category: 'Exfoliant' },
+            { id: 'bha', name: 'Salicylic Acid (BHA)', category: 'Exfoliant' },
+            { id: 'vitaminC', name: 'Vitamin C (L-Ascorbic Acid)', category: 'Antioxidant' },
+            { id: 'niacinamide', name: 'Niacinamide (Vitamin B3)', category: 'Soothing' },
+            { id: 'benzoylPeroxide', name: 'Benzoyl Peroxide', category: 'Acne treatment' },
+            { id: 'copperPeptide', name: 'Copper Peptides', category: 'Repair' },
+            { id: 'pha', name: 'Gluconolactone (PHA)', category: 'Exfoliant' },
+            { id: 'azelaic', name: 'Azelaic Acid', category: 'Brightening' },
+            { id: 'hyaluronic', name: 'Hyaluronic Acid', category: 'Hydration' },
+            { id: 'ceramide', name: 'Ceramides', category: 'Barrier support' },
+            { id: 'peptide', name: 'Matrixyl (Peptides)', category: 'Firming' }
+        ];
+
+        // 冲突规则
+        const conflictRules = [
+            {
+                pair: ['retinol', 'aha'],
+                severity: 'High',
+                description: 'Combining retinol with exfoliating acids can cause excessive irritation, redness, and peeling. Use them on alternate nights.'
+            },
+            {
+                pair: ['retinol', 'bha'],
+                severity: 'High',
+                description: 'Retinol and BHA together over-exfoliate and may compromise your skin barrier. Separate by day/night routine.'
+            },
+            {
+                pair: ['retinol', 'benzoylPeroxide'],
+                severity: 'High',
+                description: 'Benzoyl peroxide can oxidize retinol, making both less effective while increasing dryness. Avoid layering.'
+            },
+            {
+                pair: ['retinol', 'vitaminC'],
+                severity: 'Medium',
+                description: 'They work at different pH levels and combined may cause sensitivity. Use Vitamin C in the AM and retinol in the PM.'
+            },
+            {
+                pair: ['niacinamide', 'vitaminC'],
+                severity: 'Medium',
+                description: 'When combined in high concentrations, they may form niacin, which can cause temporary flushing. Wait 10-15 min between applications.'
+            },
+            {
+                pair: ['niacinamide', 'aha'],
+                severity: 'Medium',
+                description: 'Acidic pH of AHAs can convert niacinamide to niacin, leading to irritation. Apply at different times.'
+            },
+            {
+                pair: ['copperPeptide', 'vitaminC'],
+                severity: 'Medium',
+                description: 'Vitamin C can oxidize copper peptides, reducing their anti-aging benefits. Alternate between AM and PM.'
+            },
+            {
+                pair: ['aha', 'bha'],
+                severity: 'Medium',
+                description: 'Using multiple exfoliating acids simultaneously can strip the skin. Choose one or use on different days.'
+            },
+            {
+                pair: ['benzoylPeroxide', 'vitaminC'],
+                severity: 'Low',
+                description: 'May cause mild oxidation. If tolerated, separate application by time of day.'
+            }
+        ];
+
+        let selectedIngredients = new Set();
+
+        // 渲染成分 cloud
+        function renderChips() {
+            const container = document.getElementById('chipContainer');
+            container.innerHTML = '';
+            ingredientList.forEach(ing => {
+                const chip = document.createElement('div');
+                chip.className = `chip${selectedIngredients.has(ing.id) ? ' selected' : ''}`;
+                chip.textContent = ing.name;
+                chip.dataset.id = ing.id;
+                chip.addEventListener('click', () => {
+                    if (selectedIngredients.has(ing.id)) {
+                        selectedIngredients.delete(ing.id);
+                    } else {
+                        selectedIngredients.add(ing.id);
+                    }
+                    renderChips();
+                    clearResult();
+                });
+                container.appendChild(chip);
+            });
+        }
+
+        // 手动添加自定义成分（不在列表里的，仅用于检测匹配？简单处理，加入一个临时id）
+        function addCustomIngredient() {
+            const input = document.getElementById('customIngredient');
+            const name = input.value.trim();
+            if (name === '') return;
+            // 生成一个简单id
+            const customId = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!selectedIngredients.has(customId)) {
+                selectedIngredients.add(customId);
+                // 临时存储名称映射
+                if (!window._customNames) window._customNames = {};
+                window._customNames[customId] = name;
+                renderChips();
+                // 额外显示一个标签？这里简单，重新渲染时需处理自定义显示。我们维持一个全局映射
+            }
+            input.value = '';
+            clearResult();
+        }
+
+        // 改写 renderChips 以支持显示自定义成分
+        function renderChips() {
+            const container = document.getElementById('chipContainer');
+            container.innerHTML = '';
+            // 显示预定义成分
+            ingredientList.forEach(ing => {
+                const chip = document.createElement('div');
+                chip.className = `chip${selectedIngredients.has(ing.id) ? ' selected' : ''}`;
+                chip.textContent = ing.name;
+                chip.dataset.id = ing.id;
+                chip.addEventListener('click', () => {
+                    if (selectedIngredients.has(ing.id)) {
+                        selectedIngredients.delete(ing.id);
+                    } else {
+                        selectedIngredients.add(ing.id);
+                    }
+                    renderChips();
+                    clearResult();
+                });
+                container.appendChild(chip);
+            });
+            // 显示手动添加的成分
+            if (window._customNames) {
+                Object.keys(window._customNames).forEach(customId => {
+                    if (selectedIngredients.has(customId)) {
+                        const chip = document.createElement('div');
+                        chip.className = 'chip selected';
+                        chip.textContent = window._customNames[customId];
+                        chip.dataset.id = customId;
+                        chip.addEventListener('click', () => {
+                            selectedIngredients.delete(customId);
+                            delete window._customNames[customId];
+                            renderChips();
+                            clearResult();
+                        });
+                        container.appendChild(chip);
+                    }
+                });
+            }
+        }
+
+        function getIngredientName(id) {
+            if (window._customNames && window._customNames[id]) return window._customNames[id];
+            const found = ingredientList.find(i => i.id === id);
+            return found ? found.name : id;
+        }
+
+        function clearResult() {
+            document.getElementById('resultArea').innerHTML = '';
+        }
+
+        function checkConflicts() {
+            const resultDiv = document.getElementById('resultArea');
+            if (selectedIngredients.size < 2) {
+                resultDiv.innerHTML = `<div class="result-card"><span style="color:#888;">Select at least two ingredients to check.</span></div>`;
+                return;
+            }
+
+            const ids = Array.from(selectedIngredients);
+            const conflictsFound = [];
+
+            // 双重循环检查规则
+            for (let i = 0; i < ids.length; i++) {
+                for (let j = i+1; j < ids.length; j++) {
+                    const a = ids[i];
+                    const b = ids[j];
+                    for (const rule of conflictRules) {
+                        if ((rule.pair[0] === a && rule.pair[1] === b) ||
+                            (rule.pair[0] === b && rule.pair[1] === a)) {
+                            conflictsFound.push({
+                                ingredientA: getIngredientName(a),
+                                ingredientB: getIngredientName(b),
+                                severity: rule.severity,
+                                description: rule.description
+                            });
+                            break; // 每对只匹配一条规则
+                        }
+                    }
+                }
+            }
+
+            // 渲染结果
+            let html = '<div class="result-card">';
+            if (conflictsFound.length === 0) {
+                html += `<div class="safe-badge"><span class="no-conflict-emoji">🛡️</span> No conflicts detected!</div>`;
+                html += `<div class="tip-text">Your selected ingredients are generally safe to use together. Still, always patch-test and listen to your skin.</div>`;
+            } else {
+                html += `<div style="font-weight:650; margin-bottom:14px;">⚠️ Found ${conflictsFound.length} potential conflict${conflictsFound.length>1?'s':''}:</div>`;
+                conflictsFound.forEach(c => {
+                    html += `
+                    <div class="conflict-item">
+                        <div class="conflict-pair">${c.ingredientA} + ${c.ingredientB} <span style="font-weight:400; font-size:12px; background:#ffe0d4; padding:2px 8px; border-radius:12px; margin-left:6px;">${c.severity} risk</span></div>
+                        <div class="conflict-desc">${c.description}</div>
+                    </div>`;
+                });
+                html += `<div class="tip-text">💡 Tip: Use conflicting ingredients at different times of day (AM/PM) or on alternate days to maintain healthy skin.</div>`;
+            }
+            html += '</div>';
+            resultDiv.innerHTML = html;
+        }
+
+        // 初始化事件
+        document.getElementById('addCustomBtn').addEventListener('click', addCustomIngredient);
+        document.getElementById('customIngredient').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addCustomIngredient();
+        });
+        document.getElementById('checkBtn').addEventListener('click', checkConflicts);
+
+        // 初始渲染
+        window._customNames = {};
+        renderChips();
+    </script>
+</body>
+</html>
