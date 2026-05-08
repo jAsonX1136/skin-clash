@@ -90,11 +90,12 @@ Check [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines (once you add one).
 
 ## ☕️ Support
 
-If SkinClash saved your skin (or at least stopped you from googling “can I mix…” at midnight), consider:
+If SkinClash saved your skin (or at least stopped you from googling "can I mix..." at midnight), consider buying me a coffee through our secure checkout.
 
-- **Support me on Ko-fi (https://ko-fi.com/skinclash)**
-- **Sharing it** with your skincare‑obsessed friends 💚  
-- **Starring this repo** ⭐ – it helps more people find it
+👉 **[Support SkinClash](https://skin-clash.com/#supportSection)**
+
+Your support unlocks custom ingredient input for a limited time and keeps the tool free for everyone.  
+Accepted via **Creem** (credit/debit cards, Apple Pay, Google Pay, and more).
 
 ---
 
