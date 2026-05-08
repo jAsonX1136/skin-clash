@@ -246,9 +246,20 @@
         .amount-btn:hover {
             border-color: var(--primary);
         }
-        #paypal-button-container {
+        #creem-checkout-btn {
             margin-top: 16px;
-            min-height: 45px;
+            display: inline-block;
+            padding: 14px 30px;
+            background: #4f46e5;
+            color: white;
+            font-weight: 650;
+            border-radius: 40px;
+            text-decoration: none;
+            transition: 0.2s;
+            box-shadow: 0 10px 18px -8px rgba(79, 70, 229, 0.4);
+        }
+        #creem-checkout-btn:hover {
+            background: #4338ca;
         }
         hr { border: 0.5px solid var(--border); margin: 18px 0; }
         .unlock-note {
@@ -258,6 +269,12 @@
             cursor: pointer;
             text-decoration: underline;
             display: inline-block;
+        }
+        .remaining-days {
+            font-size: 12px;
+            color: #4a6b40;
+            margin-top: 5px;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -280,7 +297,10 @@
             <span class="lock-icon">🔒</span>
             <button id="addCustomBtn" disabled>Add</button>
         </div>
-        <div class="unlock-note" id="unlockNote" style="display: block;">✨ Support any amount to unlock custom ingredients</div>
+        <div id="unlockInfo">
+            <div class="unlock-note" id="unlockNote" style="display: block;">✨ Support to unlock custom ingredients</div>
+            <div class="remaining-days" id="remainingDays" style="display: none;"></div>
+        </div>
 
         <button class="action-btn" id="checkBtn">⚡ Check for Conflicts</button>
 
@@ -288,21 +308,19 @@
             <!-- 结果动态插入 -->
         </div>
 
-        <!-- 支持区域：金额选择 + PayPal 按钮 -->
+        <!-- 支持区域：金额选择 + Creem 支付链接 -->
         <div class="support-section" id="supportSection">
-            <p>💚 If this tool saved your skin, buy me a coffee ☕️</p>
+            <p>💚 Choose your support level — unlock custom ingredients instantly</p>
             <div class="amount-buttons">
                 <button class="amount-btn active" data-amount="2.99">$2.99</button>
                 <button class="amount-btn" data-amount="3.99">$3.99</button>
                 <button class="amount-btn" data-amount="4.99">$4.99</button>
             </div>
-            <p style="font-size: 13px; color: #888; margin: 8px 0 12px;">or pay any amount via PayPal</p>
-            <div id="paypal-button-container"></div>
+            <p style="font-size: 13px; color: #888; margin: 8px 0 4px;">$2.99 → 15 days · $3.99 → 30 days · $4.99 → 60 days</p>
+            <p style="font-size: 13px; color: #888; margin: 4px 0 12px;">Secured by Creem</p>
+            <a id="creem-checkout-btn" href="#" target="_blank">💳 Support SkinClash</a>
         </div>
     </div>
-
-    <!-- PayPal SDK（已嵌入你的 Client ID） -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AbaPd-hgUjdnOtzDEFHwOxcmtvyCMijVu4lYRLURSraEZLaNoAW48Eqp4KsLS2nfNErjOqGsQZAYjY_k&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
 
     <script>
         // ==================== 护肤成分数据库 ====================
@@ -372,9 +390,29 @@
         let selectedIngredients = new Set();
         window._customNames = {};
 
-        // 检查解锁状态
+        // ==================== 解锁与时间逻辑 ====================
+        const DEFAULT_DURATION_DAYS = 30; // 当没有指定天数时的默认值
+
+        function getUnlockData() {
+            const data = localStorage.getItem('skinClashUnlockData');
+            return data ? JSON.parse(data) : null;
+        }
+
+        function setUnlockData(timestamp, durationDays) {
+            localStorage.setItem('skinClashUnlockData', JSON.stringify({ unlockTime: timestamp, durationDays }));
+        }
+
         function isUnlocked() {
-            return localStorage.getItem('skinClashUnlocked') === 'true';
+            const data = getUnlockData();
+            if (!data) return false;
+            const now = Date.now();
+            const expiryTime = data.unlockTime + data.durationDays * 24 * 60 * 60 * 1000;
+            if (now < expiryTime) {
+                return true;
+            } else {
+                localStorage.removeItem('skinClashUnlockData');
+                return false;
+            }
         }
 
         function unlockCustomInput() {
@@ -382,36 +420,75 @@
             const btn = document.getElementById('addCustomBtn');
             const lockIcon = document.querySelector('.lock-icon');
             const note = document.getElementById('unlockNote');
+            const remainingDaysEl = document.getElementById('remainingDays');
+
             input.disabled = false;
             input.placeholder = 'Or type any ingredient...';
             btn.disabled = false;
             if (lockIcon) lockIcon.style.display = 'none';
             if (note) note.style.display = 'none';
             document.getElementById('customArea').classList.add('unlocked');
+
+            const data = getUnlockData();
+            if (data) {
+                const now = Date.now();
+                const expiryTime = data.unlockTime + data.durationDays * 24 * 60 * 60 * 1000;
+                const remainingMs = expiryTime - now;
+                const remainingDays = Math.max(0, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
+                remainingDaysEl.style.display = 'block';
+                remainingDaysEl.textContent = `✅ Unlocked · ${remainingDays} day${remainingDays !== 1 ? 's' : ''} remaining (of ${data.durationDays} total)`;
+            }
         }
 
-        // 初始化时根据状态解锁
+        function lockCustomInput() {
+            const input = document.getElementById('customIngredient');
+            const btn = document.getElementById('addCustomBtn');
+            const lockIcon = document.querySelector('.lock-icon');
+            const note = document.getElementById('unlockNote');
+            const remainingDaysEl = document.getElementById('remainingDays');
+
+            input.disabled = true;
+            input.placeholder = '🔒 Unlock custom ingredients with a coffee';
+            btn.disabled = true;
+            if (lockIcon) lockIcon.style.display = 'inline';
+            if (note) note.style.display = 'block';
+            if (remainingDaysEl) remainingDaysEl.style.display = 'none';
+            document.getElementById('customArea').classList.remove('unlocked');
+        }
+
+        // 初始化时检查状态
         if (isUnlocked()) {
             unlockCustomInput();
+        } else {
+            lockCustomInput();
         }
 
-        // 点击锁定区域时触发付费提示并滚动到底部
+        // 检查 URL 参数解锁 (Creem 支付成功回调)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('unlock') === 'true') {
+            const daysParam = urlParams.get('days');
+            const durationDays = daysParam ? parseInt(daysParam, 10) : DEFAULT_DURATION_DAYS;
+            const now = Date.now();
+            setUnlockData(now, durationDays);
+            unlockCustomInput();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 点击锁定区域时提示并滚动
         document.getElementById('customIngredient').addEventListener('click', function(e) {
             if (!isUnlocked()) {
-                alert('✨ This feature is for supporters only. Buy me a coffee below to unlock custom ingredients!');
+                alert('✨ Support any level to unlock custom ingredients for a limited time!');
                 document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
             }
         });
         document.getElementById('addCustomBtn').addEventListener('click', function(e) {
             if (!isUnlocked()) {
-                alert('✨ Unlock custom ingredients by supporting with any amount below.');
+                alert('✨ Choose $2.99 (15d), $3.99 (30d) or $4.99 (60d) to unlock custom ingredients.');
                 document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
             } else {
-                // 如果已解锁，正常执行添加逻辑
                 addCustomIngredient();
             }
         });
-        // 解锁提示文字点击也可以滚动
         document.getElementById('unlockNote').addEventListener('click', function() {
             if (!isUnlocked()) {
                 document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
@@ -443,7 +520,6 @@
                 });
                 container.appendChild(chip);
             });
-            // 显示自定义成分
             if (window._customNames) {
                 Object.keys(window._customNames).forEach(customId => {
                     if (selectedIngredients.has(customId)) {
@@ -464,6 +540,11 @@
         }
 
         function addCustomIngredient() {
+            if (!isUnlocked()) {
+                alert('✨ Your access has expired. Please support again to unlock.');
+                lockCustomInput();
+                return;
+            }
             const input = document.getElementById('customIngredient');
             const name = input.value.trim();
             if (name === '') return;
@@ -508,7 +589,7 @@
             }
             let html = '<div class="result-card">';
             if (conflictsFound.length === 0) {
-                html += `<div class="safe-badge"><span class="no-conflict-emoji">🛡️</span> No conflicts detected!</div>`;
+                html += `<div class="safe-badge"><span>🛡️</span> No conflicts detected!</div>`;
                 html += `<div class="tip-text">Your selected ingredients are generally safe to use together. Still, always patch-test and listen to your skin.</div>`;
             } else {
                 html += `<div style="font-weight:650; margin-bottom:14px;">⚠️ Found ${conflictsFound.length} potential conflict${conflictsFound.length>1?'s':''}:</div>`;
@@ -525,7 +606,6 @@
             resultDiv.innerHTML = html;
         }
 
-        // 初始化基础事件（除了自定义添加，自定义添加的事件已单独处理）
         document.getElementById('customIngredient').addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && isUnlocked()) {
                 addCustomIngredient();
@@ -534,71 +614,31 @@
         document.getElementById('checkBtn').addEventListener('click', checkConflicts);
         renderChips();
 
-        // ==================== PayPal 按钮逻辑 ====================
-        (function() {
-            let currentAmount = '2.99';
-            const paypalContainer = document.getElementById('paypal-button-container');
+        // ==================== Creem 支付链接切换 ====================
+        // 请替换为你自己的三个 Checkout Link
+        const CREEM_LINK_2_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_2_99";
+        const CREEM_LINK_3_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_3_99";
+        const CREEM_LINK_4_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_4_99";
 
-            // 金额按钮切换
-            document.querySelectorAll('.amount-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentAmount = this.dataset.amount;
-                    if (paypalContainer.innerHTML) {
-                        renderPaypalButton();
-                    }
-                });
+        let currentLink = CREEM_LINK_2_99;
+        const checkoutBtn = document.getElementById('creem-checkout-btn');
+
+        function updateCheckoutLink(amount) {
+            if (amount === '2.99') currentLink = CREEM_LINK_2_99;
+            else if (amount === '3.99') currentLink = CREEM_LINK_3_99;
+            else if (amount === '4.99') currentLink = CREEM_LINK_4_99;
+            checkoutBtn.href = currentLink;
+        }
+
+        updateCheckoutLink('2.99');
+
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                updateCheckoutLink(this.dataset.amount);
             });
-
-            function renderPaypalButton() {
-                paypalContainer.innerHTML = '';
-                if (typeof paypal === 'undefined') {
-                    paypalContainer.innerHTML = '<p style="color:#c97c5b;">⚠️ PayPal not loaded. Please refresh.</p>';
-                    return;
-                }
-                paypal.Buttons({
-                    style: {
-                        layout: 'vertical',
-                        color: 'gold',
-                        shape: 'pill',
-                        label: 'paypal'
-                    },
-                    createOrder: function(data, actions) {
-                        return actions.order.create({
-                            purchase_units: [{
-                                description: 'Support SkinClash - unlock custom ingredients',
-                                amount: {
-                                    currency_code: 'USD',
-                                    value: currentAmount
-                                }
-                            }]
-                        });
-                    },
-                    onApprove: function(data, actions) {
-                        return actions.order.capture().then(function(details) {
-                            const name = details.payer.name.given_name || 'friend';
-                            // 解锁自定义成分输入
-                            localStorage.setItem('skinClashUnlocked', 'true');
-                            unlockCustomInput();
-                            alert('Thank you so much, ' + name + '! ☕️ Custom ingredients are now unlocked.');
-                        });
-                    },
-                    onError: function(err) {
-                        console.error('PayPal error:', JSON.stringify(err, null, 2));
-                        let errorMsg = 'Payment failed. ';
-                        if (err && err.message) {
-                            errorMsg += 'Reason: ' + err.message;
-                        } else {
-                            errorMsg += 'Please try again later.';
-                        }
-                        alert(errorMsg);
-                    }
-                }).render('#paypal-button-container');
-            }
-
-            renderPaypalButton();
-        })();
+        });
     </script>
 </body>
 </html>
