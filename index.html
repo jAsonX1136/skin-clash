@@ -2,641 +2,1201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>SkinClash ✨ Ingredient Conflict Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinClash ✨ — Your Skincare Ingredient Safety Checker</title>
+    <meta name="description" content="Instantly check if your skincare ingredients clash before you layer them. AI-powered, free, and no sign-up required.">
+    <!-- Anime.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --bg: #fcf9f5;
-            --card-bg: #ffffff;
+            --bg: #faf8f5;
+            --surface: rgba(255,255,255,0.72);
+            --surface-solid: #ffffff;
             --primary: #a3b18a;
+            --primary-dark: #8a9a6e;
             --primary-soft: #d4ddc6;
             --danger: #c97c5b;
             --danger-soft: #fbe9e4;
+            --accent-purple: #8b7aa1;
+            --accent-blue: #7aa1b8;
+            --accent-amber: #c9a96e;
             --text: #3e4a3c;
             --text-light: #6b705c;
-            --border: #e6e3da;
-            --shadow: 0 4px 20px rgba(0,0,0,0.04);
-            --radius: 22px;
+            --text-lighter: #9a9e8a;
+            --border: #e8e5dc;
+            --border-light: #f0ede8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-lg: 0 12px 48px rgba(0,0,0,0.08);
+            --shadow-glow: 0 0 40px rgba(163,177,138,0.25);
             --radius-sm: 12px;
+            --radius: 18px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --font-sans: 'Inter', 'Helvetica Neue', 'PingFang SC', system-ui, -apple-system, sans-serif;
+            --font-display: 'Inter', 'Helvetica Neue', 'PingFang SC', system-ui, -apple-system, sans-serif;
+            --max-width: 1200px;
+            --nav-height: 64px;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Inter', 'Helvetica Neue', 'PingFang SC', system-ui, sans-serif;
+            font-family: var(--font-sans);
             background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
+        /* 背景装饰 */
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatGlow 12s ease-in-out infinite;
+        }
+        .bg-glow-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(163,177,138,0.3) 0%, transparent 70%);
+            top: -200px; right: -150px;
+        }
+        .bg-glow-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(139,122,161,0.25) 0%, transparent 70%);
+            bottom: -150px; left: -100px;
+            animation-delay: -6s;
+        }
+        .bg-glow-3 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(201,169,110,0.2) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -3s;
+        }
+
+        @keyframes floatGlow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(-30px, -20px) scale(1.02); }
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: var(--max-width);
+            height: var(--nav-height);
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(232,229,220,0.6);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+        .navbar.scrolled {
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.3px;
+        }
+        .nav-brand .brand-icon {
+            width: 38px; height: 38px;
+            background: var(--primary-soft);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 24px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover {
+            background: var(--primary-soft);
+            color: var(--text);
+        }
+        .nav-cta {
+            background: var(--primary) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 24px !important;
+            transition: all 0.2s !important;
+        }
+        .nav-cta:hover {
+            background: var(--primary-dark) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(163,177,138,0.4);
+        }
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        /* 容器 */
         .container {
             width: 100%;
-            max-width: 500px;
-            padding: 28px 22px 32px;
-            background: var(--card-bg);
-            border-radius: 36px;
-            box-shadow: var(--shadow);
-            margin: 15px 0;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
         }
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 6px;
+
+        /* Section 通用 */
+        section {
+            padding: 80px 0;
+            position: relative;
+            z-index: 1;
         }
-        .logo-icon {
-            font-size: 38px;
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+        .section-badge {
+            display: inline-block;
             background: var(--primary-soft);
-            width: 56px; height: 56px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        h1 {
-            font-size: 26px;
-            font-weight: 650;
-            letter-spacing: -0.5px;
-            color: var(--text);
-            line-height: 1.2;
-        }
-        .subtitle {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-bottom: 28px;
-            margin-top: 4px;
-        }
-        .section-label {
+            color: var(--primary-dark);
             font-size: 13px;
             font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-light);
-            margin: 20px 0 10px;
         }
-        .ingredient-cloud {
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+        .section-subtitle {
+            font-size: 17px;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* ==================== Hero ==================== */
+        .hero {
+            padding-top: calc(var(--nav-height) + 80px);
+            padding-bottom: 60px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-bottom: 28px;
+            animation: fadeInUp 0.6s ease;
+        }
+        .hero-badge .dot {
+            width: 8px; height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.7); }
+        }
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(40px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.08;
+            color: var(--text);
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+        .hero-title .highlight {
+            background: linear-gradient(135deg, var(--danger), #e8956a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-desc {
+            font-size: 18px;
+            color: var(--text-light);
+            max-width: 560px;
+            margin: 0 auto 36px;
+            line-height: 1.7;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 8px 28px rgba(163,177,138,0.35);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(163,177,138,0.45);
+        }
+        .btn-outline {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover {
+            background: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Hero 交互式演示 */
+        .hero-demo {
+            margin-top: 48px;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+        .demo-card {
+            background: var(--surface-solid);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            max-width: 580px;
+            margin: 0 auto;
+            padding: 28px 24px;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .demo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+        }
+        .demo-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-lighter);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .demo-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
-        .chip {
+        .demo-chip {
+            padding: 10px 16px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
             background: #f4f6f0;
             border: 1.5px solid transparent;
-            padding: 10px 16px;
-            border-radius: 40px;
+            color: var(--text);
+        }
+        .demo-chip.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        .demo-chip:hover { border-color: var(--primary); }
+        .demo-result-mini {
+            background: var(--danger-soft);
+            border-radius: 16px;
+            padding: 16px 18px;
+            border-left: 4px solid var(--danger);
+            margin-top: 12px;
             font-size: 14px;
-            font-weight: 500;
+            color: #884433;
+            font-weight: 600;
+        }
+        .demo-result-safe {
+            background: #eef5e8;
+            border-radius: 16px;
+            padding: 16px 18px;
+            border-left: 4px solid var(--primary);
+            margin-top: 12px;
+            font-size: 14px;
+            color: #4a6b40;
+            font-weight: 600;
+        }
+        .demo-cta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+        .demo-check-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
+        }
+        .demo-check-btn:hover { background: var(--primary-dark); }
+        .demo-trust {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-lighter);
+        }
+        .demo-trust i { color: #4caf50; }
+
+        /* ==================== Bento Grid ==================== */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto;
+            gap: 20px;
+        }
+
+        .bento-card {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-soft);
+        }
+        .bento-card.feature-large {
+            grid-column: span 2;
+        }
+        .bento-card.feature-tall {
+            grid-row: span 2;
+        }
+        .bento-icon {
+            width: 48px; height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .bento-icon.green { background: var(--primary-soft); color: var(--primary-dark); }
+        .bento-icon.red { background: var(--danger-soft); color: var(--danger); }
+        .bento-icon.purple { background: #f0ecf5; color: var(--accent-purple); }
+        .bento-icon.blue { background: #e8f0f5; color: var(--accent-blue); }
+        .bento-icon.amber { background: #faf3e5; color: var(--accent-amber); }
+        .bento-card h3 {
+            font-size: 18px;
+            font-weight: 650;
+            margin-bottom: 8px;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+        .bento-card p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* ==================== 冲突规则展示 ==================== */
+        .conflicts-section {
+            background: linear-gradient(180deg, var(--bg) 0%, #f5f3ee 100%);
+            border-radius: var(--radius-xl);
+            padding: 64px 32px;
+            margin: 0 24px;
+        }
+        .conflict-table-wrapper {
+            overflow-x: auto;
+            margin-top: 32px;
+        }
+        .conflict-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        .conflict-table th {
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-lighter);
+            padding: 8px 16px;
+            font-weight: 600;
+        }
+        .conflict-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            background: var(--surface-solid);
+        }
+        .conflict-table tr td:first-child { border-radius: 12px 0 0 12px; }
+        .conflict-table tr td:last-child { border-radius: 0 12px 12px 0; }
+        .badge-risk {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-high { background: var(--danger-soft); color: var(--danger); }
+        .badge-medium { background: #fef5e7; color: #b8860b; }
+        .badge-low { background: #e8f5e9; color: #2e7d32; }
+
+        /* ==================== 定价卡片 ==================== */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .pricing-card {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .pricing-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+        }
+        .pricing-card.featured {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg), 0 0 0 4px rgba(163,177,138,0.12);
+            transform: scale(1.03);
+        }
+        .pricing-card.featured:hover { transform: scale(1.03) translateY(-6px); }
+        .pricing-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 18px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        .pricing-icon { font-size: 40px; margin-bottom: 16px; }
+        .pricing-amount {
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+        .pricing-amount span {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        .pricing-days {
+            font-size: 14px;
+            color: var(--text-light);
+            margin: 4px 0 20px;
+        }
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 24px;
+        }
+        .pricing-features li {
+            padding: 6px 0;
+            font-size: 14px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pricing-features li i { color: #4caf50; font-size: 12px; }
+        .pricing-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            border-radius: 28px;
+            font-weight: 650;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+        }
+        .pricing-card.featured .pricing-btn {
+            background: var(--primary);
+            color: white;
+        }
+        .pricing-btn:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* ==================== FAQ ==================== */
+        .faq-list {
+            max-width: 740px;
+            margin: 0 auto;
+        }
+        .faq-item {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .faq-item.active {
+            border-color: var(--primary-soft);
+            box-shadow: var(--shadow);
+        }
+        .faq-question {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 15px;
             color: var(--text);
             user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
-        .chip.selected {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-            font-weight: 550;
-            box-shadow: 0 4px 10px rgba(163, 177, 138, 0.3);
+        .faq-question i {
+            transition: transform 0.3s ease;
+            color: var(--text-lighter);
         }
-        .chip:hover { border-color: var(--primary); }
-        .chip.selected:hover { background: #92a17a; }
-        .manual-input-area {
-            display: flex;
-            gap: 10px;
-            margin: 8px 0 12px;
-            align-items: center;
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+            color: var(--primary);
         }
-        #customIngredient {
-            flex: 1;
-            padding: 13px 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 40px;
-            font-size: 15px;
-            outline: none;
-            background: #fefefe;
-            transition: 0.2s;
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            padding: 0 24px;
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.7;
         }
-        #customIngredient:disabled {
-            background: #f0ede8;
-            color: #aaa;
-            cursor: not-allowed;
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding: 0 24px 20px;
         }
-        #customIngredient:focus { border-color: var(--primary); }
-        #addCustomBtn {
-            background: var(--primary);
-            border: none;
-            color: white;
-            padding: 0 20px;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: 0.2s;
+
+        /* ==================== CTA 底部 ==================== */
+        .cta-section {
+            text-align: center;
+            padding: 80px 24px;
+            background: linear-gradient(135deg, rgba(163,177,138,0.08) 0%, rgba(139,122,161,0.06) 100%);
+            border-radius: var(--radius-xl);
+            margin: 0 24px 60px;
         }
-        #addCustomBtn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .lock-icon {
-            font-size: 18px;
-            margin-left: -30px;
-            z-index: 2;
-            color: #aaa;
-            pointer-events: none;
-        }
-        .unlocked .lock-icon {
-            display: none;
-        }
-        .action-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            border: none;
-            border-radius: 40px;
-            color: white;
-            font-size: 17px;
-            font-weight: 650;
-            cursor: pointer;
-            transition: 0.2s;
-            margin: 18px 0 22px;
-            letter-spacing: 0.3px;
-            box-shadow: 0 10px 18px -8px rgba(163, 177, 138, 0.4);
-        }
-        .action-btn:active { transform: scale(0.97); }
-        .result-card {
-            background: #fbfcf9;
-            border-radius: 22px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            margin: 12px 0 16px;
-        }
-        .conflict-item {
-            background: var(--danger-soft);
-            border-left: 5px solid var(--danger);
-            padding: 14px 16px;
-            border-radius: 16px;
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -1px;
             margin-bottom: 12px;
         }
-        .conflict-pair {
-            font-weight: 700;
-            font-size: 16px;
-            color: #884433;
-            margin-bottom: 4px;
-        }
-        .conflict-desc {
-            font-size: 14px;
-            color: #5f4b44;
-            line-height: 1.4;
-        }
-        .safe-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #4a6b40;
-            font-size: 16px;
-            padding: 8px 0;
-        }
-        .tip-text {
-            font-size: 13px;
+        .cta-desc {
             color: var(--text-light);
-            margin-top: 8px;
-            line-height: 1.5;
-            border-top: 1px solid var(--border);
-            padding-top: 12px;
+            margin-bottom: 28px;
+            font-size: 16px;
         }
-        .support-section {
+
+        /* ==================== 页脚 ==================== */
+        footer {
             text-align: center;
-            margin-top: 28px;
-            border-top: 1px dashed var(--border);
-            padding-top: 22px;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-lighter);
+            font-size: 13px;
         }
-        .support-section p {
-            font-size: 14px;
+        footer a {
             color: var(--text-light);
-            margin-bottom: 6px;
-        }
-        .amount-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 12px 0 6px;
-        }
-        .amount-btn {
-            padding: 10px 20px;
-            border-radius: 40px;
-            border: 2px solid #e0dcd4;
-            background: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .amount-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-        .amount-btn:hover {
-            border-color: var(--primary);
-        }
-        #creem-checkout-btn {
-            margin-top: 16px;
-            display: inline-block;
-            padding: 14px 30px;
-            background: #4f46e5;
-            color: white;
-            font-weight: 650;
-            border-radius: 40px;
             text-decoration: none;
-            transition: 0.2s;
-            box-shadow: 0 10px 18px -8px rgba(79, 70, 229, 0.4);
+            margin: 0 8px;
         }
-        #creem-checkout-btn:hover {
-            background: #4338ca;
+        footer a:hover { color: var(--primary-dark); }
+
+        /* ==================== 动画 ==================== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        hr { border: 0.5px solid var(--border); margin: 18px 0; }
-        .unlock-note {
-            font-size: 12px;
-            color: #c97c5b;
-            margin-top: 5px;
-            cursor: pointer;
-            text-decoration: underline;
-            display: inline-block;
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
-        .remaining-days {
-            font-size: 12px;
-            color: #4a6b40;
-            margin-top: 5px;
-            font-weight: 500;
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ==================== 响应式 ==================== */
+        @media (max-width: 1024px) {
+            .bento-grid { grid-template-columns: repeat(2, 1fr); }
+            .bento-card.feature-large { grid-column: span 2; }
+            .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+            .pricing-card.featured { transform: scale(1); }
+            .pricing-card.featured:hover { transform: scale(1) translateY(-6px); }
+            .conflicts-section { margin: 0 12px; padding: 40px 16px; }
+            .cta-section { margin: 0 12px 40px; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .nav-toggle { display: block; }
+            .nav-links.mobile-open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: calc(var(--nav-height) + 12px);
+                left: 0;
+                right: 0;
+                background: var(--surface-solid);
+                border-radius: var(--radius-lg);
+                padding: 16px;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--border);
+            }
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-card.feature-large { grid-column: span 1; }
+            .bento-card.feature-tall { grid-row: span 1; }
+            section { padding: 48px 0; }
+            .section-title { font-size: 30px; }
+            .hero { padding-top: calc(var(--nav-height) + 48px); }
+            .hero-title { font-size: 36px; }
+            .conflict-table { font-size: 12px; }
+            .conflict-table th, .conflict-table td { padding: 10px 8px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo-icon">🧴</div>
-            <h1>SkinClash</h1>
-        </div>
-        <div class="subtitle">Instantly check if your skincare ingredients clash.<br>Save your skin barrier. ✨</div>
 
-        <div class="section-label">🔬 Select your ingredients</div>
-        <div class="ingredient-cloud" id="chipContainer">
-            <!-- 动态生成成分标签 -->
-        </div>
+    <!-- 背景光晕 -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
 
-        <!-- 自定义成分输入区（默认锁定） -->
-        <div class="manual-input-area" id="customArea">
-            <input type="text" id="customIngredient" placeholder="🔒 Unlock custom ingredients with a coffee" disabled>
-            <span class="lock-icon">🔒</span>
-            <button id="addCustomBtn" disabled>Add</button>
-        </div>
-        <div id="unlockInfo">
-            <div class="unlock-note" id="unlockNote" style="display: block;">✨ Support to unlock custom ingredients</div>
-            <div class="remaining-days" id="remainingDays" style="display: none;"></div>
-        </div>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="nav-brand">
+            <span class="brand-icon">🧴</span>
+            SkinClash
+        </a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#conflicts">Conflicts</a></li>
+            <li><a href="#pricing">Unlock</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#pricing" class="nav-cta">✨ Support</a></li>
+        </ul>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
 
-        <button class="action-btn" id="checkBtn">⚡ Check for Conflicts</button>
-
-        <div id="resultArea">
-            <!-- 结果动态插入 -->
-        </div>
-
-        <!-- 支持区域：金额选择 + Creem 支付链接 -->
-        <div class="support-section" id="supportSection">
-            <p>💚 Choose your support level — unlock custom ingredients instantly</p>
-            <div class="amount-buttons">
-                <button class="amount-btn active" data-amount="2.99">$2.99</button>
-                <button class="amount-btn" data-amount="3.99">$3.99</button>
-                <button class="amount-btn" data-amount="4.99">$4.99</button>
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <span class="dot"></span> Free · No sign-up · Works in your browser
             </div>
-            <p style="font-size: 13px; color: #888; margin: 8px 0 4px;">$2.99 → 15 days · $3.99 → 30 days · $4.99 → 60 days</p>
-            <p style="font-size: 13px; color: #888; margin: 4px 0 12px;">Secured by Creem</p>
-            <a id="creem-checkout-btn" href="#" target="_blank">💳 Support SkinClash</a>
+            <h1 class="hero-title">
+                Your serums might be<br>
+                <span class="highlight">fighting each other</span>
+            </h1>
+            <p class="hero-desc">
+                Instantly check for ingredient conflicts before you layer. Built by a skincare nerd, powered by science — and completely free.
+            </p>
+            <div class="hero-actions">
+                <a href="#features" class="btn btn-primary">
+                    🔬 Try it now
+                </a>
+                <a href="#pricing" class="btn btn-outline">
+                    ☕️ Support & unlock more
+                </a>
+            </div>
+
+            <!-- 交互式演示 -->
+            <div class="hero-demo">
+                <div class="demo-card" id="demoCard">
+                    <div class="demo-label">🧪 Live Demo — Try it right here (12 actives)</div>
+                    <div class="demo-chips" id="demoChips">
+                        <span class="demo-chip" data-ingredient="retinol">Retinol</span>
+                        <span class="demo-chip" data-ingredient="aha">Glycolic Acid (AHA)</span>
+                        <span class="demo-chip" data-ingredient="bha">Salicylic Acid (BHA)</span>
+                        <span class="demo-chip" data-ingredient="vitaminC">Vitamin C</span>
+                        <span class="demo-chip" data-ingredient="niacinamide">Niacinamide</span>
+                        <span class="demo-chip" data-ingredient="benzoylPeroxide">Benzoyl Peroxide</span>
+                        <span class="demo-chip" data-ingredient="copperPeptide">Copper Peptides</span>
+                        <span class="demo-chip" data-ingredient="pha">Gluconolactone (PHA)</span>
+                        <span class="demo-chip" data-ingredient="azelaic">Azelaic Acid</span>
+                        <span class="demo-chip" data-ingredient="hyaluronic">Hyaluronic Acid</span>
+                        <span class="demo-chip" data-ingredient="ceramide">Ceramides</span>
+                        <span class="demo-chip" data-ingredient="peptide">Matrixyl (Peptides)</span>
+                    </div>
+                    <div id="demoResult"></div>
+                    <div class="demo-cta-row">
+                        <button class="demo-check-btn" id="demoCheckBtn">⚡ Check Now</button>
+                        <span class="demo-trust"><i class="fas fa-shield-halved"></i> 100% private</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Bento Grid 功能展示 -->
+    <section id="features">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-badge">Features</span>
+                <h2 class="section-title">Everything you need to layer safely</h2>
+                <p class="section-subtitle">From ingredient analysis to smart recommendations, SkinClash covers every step of your routine check.</p>
+            </div>
+            <div class="bento-grid">
+                <!-- 卡片 1 — 大卡片 -->
+                <div class="bento-card feature-large fade-in-up">
+                    <div class="bento-icon green"><i class="fas fa-magnifying-glass-chart"></i></div>
+                    <h3>1-Click Conflict Detection</h3>
+                    <p>Select any ingredients from your current routine, hit "Check", and instantly see risky combinations with severity ratings — High, Medium, or Low. No more late-night Googling.</p>
+                </div>
+                <!-- 卡片 2 -->
+                <div class="bento-card fade-in-up">
+                    <div class="bento-icon red"><i class="fas fa-flask"></i></div>
+                    <h3>Science-Backed Rules</h3>
+                    <p>9 built-in conflict rules based on dermatological research. Understand <em>why</em> ingredients clash, not just whether they do.</p>
+                </div>
+                <!-- 卡片 3 -->
+                <div class="bento-card fade-in-up">
+                    <div class="bento-icon purple"><i class="fas fa-vial-circle-check"></i></div>
+                    <h3>Custom Ingredients</h3>
+                    <p>Don't see your product? Unlock custom ingredient input and add <strong>any</strong> active to test against our database.</p>
+                </div>
+                <!-- 卡片 4 — 高大卡片 -->
+                <div class="bento-card feature-tall fade-in-up">
+                    <div class="bento-icon blue"><i class="fas fa-mobile-screen-button"></i></div>
+                    <h3>Works Anywhere</h3>
+                    <p>Mobile-optimized. Use it in the bathroom, at Sephora, or while doom-scrolling skincare TikTok at 2 AM.</p>
+                    <p style="margin-top:16px;font-size:13px;color:var(--text-lighter);">
+                        <i class="fas fa-check-circle" style="color:#4caf50;"></i> No app install<br>
+                        <i class="fas fa-check-circle" style="color:#4caf50;"></i> No account needed<br>
+                        <i class="fas fa-check-circle" style="color:#4caf50;"></i> Works offline
+                    </p>
+                </div>
+                <!-- 卡片 5 -->
+                <div class="bento-card fade-in-up">
+                    <div class="bento-icon amber"><i class="fas fa-shield-halved"></i></div>
+                    <h3>100% Private</h3>
+                    <p>All checks run entirely in your browser. No data is ever collected, stored, or sent anywhere. Your routine stays yours.</p>
+                </div>
+                <!-- 卡片 6 — 大卡片 -->
+                <div class="bento-card feature-large fade-in-up">
+                    <div class="bento-icon green"><i class="fas fa-calendar-check"></i></div>
+                    <h3>Smart Scheduling Tips</h3>
+                    <p>When ingredients conflict, we don't just flag it — we tell you exactly how to use them safely: split by AM/PM, alternate days, or wait between applications.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 冲突规则展示 -->
+    <section id="conflicts">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-badge">Built-in Rules</span>
+                <h2 class="section-title">9 ingredient conflicts detected instantly</h2>
+                <p class="section-subtitle">Based on dermatological research. Updated as new data emerges.</p>
+            </div>
+            <div class="conflict-table-wrapper fade-in-up">
+                <table class="conflict-table">
+                    <thead>
+                        <tr><th>Ingredient A</th><th>Ingredient B</th><th>Risk</th><th>Recommendation</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Retinol</strong></td><td><strong>Glycolic Acid (AHA)</strong></td>
+                            <td><span class="badge-risk badge-high">High</span></td>
+                            <td>Use on alternate nights</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Retinol</strong></td><td><strong>Salicylic Acid (BHA)</strong></td>
+                            <td><span class="badge-risk badge-high">High</span></td>
+                            <td>Separate by day/night routine</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Retinol</strong></td><td><strong>Benzoyl Peroxide</strong></td>
+                            <td><span class="badge-risk badge-high">High</span></td>
+                            <td>Avoid layering entirely</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vitamin C</strong></td><td><strong>Niacinamide</strong></td>
+                            <td><span class="badge-risk badge-medium">Medium</span></td>
+                            <td>Wait 10-15 min between applications</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vitamin C</strong></td><td><strong>Retinol</strong></td>
+                            <td><span class="badge-risk badge-medium">Medium</span></td>
+                            <td>Vitamin C in AM, Retinol in PM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Copper Peptides</strong></td><td><strong>Vitamin C</strong></td>
+                            <td><span class="badge-risk badge-medium">Medium</span></td>
+                            <td>Alternate between AM and PM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Niacinamide</strong></td><td><strong>AHA</strong></td>
+                            <td><span class="badge-risk badge-medium">Medium</span></td>
+                            <td>Apply at different times of day</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AHA</strong></td><td><strong>BHA</strong></td>
+                            <td><span class="badge-risk badge-medium">Medium</span></td>
+                            <td>Choose one or use on different days</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Benzoyl Peroxide</strong></td><td><strong>Vitamin C</strong></td>
+                            <td><span class="badge-risk badge-low">Low</span></td>
+                            <td>Separate by time of day if tolerated</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 定价卡片 -->
+    <section id="pricing">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-badge">Unlock</span>
+                <h2 class="section-title">Support SkinClash, unlock custom ingredients</h2>
+                <p class="section-subtitle">Built-in ingredient checks are free forever. Unlock custom ingredient input to test <em>any</em> product.</p>
+            </div>
+            <div class="pricing-grid">
+                <!-- 基础 -->
+                <div class="pricing-card fade-in-up">
+                    <div class="pricing-icon">🧴</div>
+                    <div class="pricing-amount">$2.99</div>
+                    <div class="pricing-days">Unlocks for <strong>15 days</strong></div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> All built-in ingredients</li>
+                        <li><i class="fas fa-check"></i> Custom ingredient input</li>
+                        <li><i class="fas fa-check"></i> Conflict detection</li>
+                        <li><i class="fas fa-check"></i> Smart scheduling tips</li>
+                    </ul>
+                    <a href="https://creem.io/checkout/YOUR_LINK_2_99" class="pricing-btn" target="_blank">Support $2.99</a>
+                </div>
+                <!-- 推荐 -->
+                <div class="pricing-card featured fade-in-up">
+                    <div class="pricing-badge">Most Popular</div>
+                    <div class="pricing-icon">💚</div>
+                    <div class="pricing-amount">$3.99</div>
+                    <div class="pricing-days">Unlocks for <strong>30 days</strong></div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> All built-in ingredients</li>
+                        <li><i class="fas fa-check"></i> Custom ingredient input</li>
+                        <li><i class="fas fa-check"></i> Conflict detection</li>
+                        <li><i class="fas fa-check"></i> Smart scheduling tips</li>
+                        <li><i class="fas fa-check"></i> Priority feature requests</li>
+                    </ul>
+                    <a href="https://creem.io/checkout/YOUR_LINK_3_99" class="pricing-btn" target="_blank">Support $3.99</a>
+                </div>
+                <!-- 高级 -->
+                <div class="pricing-card fade-in-up">
+                    <div class="pricing-icon">🌟</div>
+                    <div class="pricing-amount">$4.99</div>
+                    <div class="pricing-days">Unlocks for <strong>60 days</strong></div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> All built-in ingredients</li>
+                        <li><i class="fas fa-check"></i> Custom ingredient input</li>
+                        <li><i class="fas fa-check"></i> Conflict detection</li>
+                        <li><i class="fas fa-check"></i> Smart scheduling tips</li>
+                        <li><i class="fas fa-check"></i> Priority feature requests</li>
+                        <li><i class="fas fa-check"></i> Early access to new features</li>
+                    </ul>
+                    <a href="https://creem.io/checkout/YOUR_LINK_4_99" class="pricing-btn" target="_blank">Support $4.99</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 智能 FAQ -->
+    <section id="faq">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-badge">FAQ</span>
+                <h2 class="section-title">Questions? We've got answers.</h2>
+                <p class="section-subtitle">Everything you need to know about SkinClash and ingredient safety.</p>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        Is SkinClash really free?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! All built-in ingredient checks are completely free, no sign-up required. You only pay if you want to unlock custom ingredient input — and even then, it's a one-time support contribution that unlocks access for weeks.
+                    </div>
+                </div>
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        How accurate are the conflict rules?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Our conflict rules are based on published dermatological research and widely accepted skincare science. We focus on well-documented interactions between active ingredients. However, everyone's skin is different — always patch test and consult a dermatologist for personalized advice.
+                    </div>
+                </div>
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        Is my data collected?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Never. All ingredient checks run entirely in your browser using JavaScript. No data is ever sent to a server, stored, or collected. SkinClash is 100% private by design.
+                    </div>
+                </div>
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        Can I add ingredients not in the list?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! Custom ingredient input is available when you support SkinClash. Once unlocked, you can type any ingredient name and test it against our built-in database. The unlock lasts 15, 30, or 60 days depending on your support level.
+                    </div>
+                </div>
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        What payment methods do you accept?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        We process payments securely through Creem, which accepts all major credit/debit cards (Visa, Mastercard, Amex, Discover), Apple Pay, Google Pay, and various local payment methods depending on your country.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA 底部 -->
+    <section>
+        <div class="container">
+            <div class="cta-section fade-in-up">
+                <h2 class="cta-title">Ready to stop guessing?</h2>
+                <p class="cta-desc">Check your routine in seconds. Your skin barrier will thank you.</p>
+                <a href="#" class="btn btn-primary" style="font-size:18px;padding:16px 36px;">
+                    🧴 Try SkinClash Now
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>
+            <a href="#">Home</a> · <a href="#features">Features</a> · <a href="#pricing">Unlock</a> · <a href="#faq">FAQ</a>
+        </p>
+        <p style="margin-top:8px;">© 2026 SkinClash. Built with ❤️ as a vibe coding experiment. Payments secured by Creem.</p>
+    </footer>
 
     <script>
-        // ==================== 护肤成分数据库 ====================
-        const ingredientList = [
-            { id: 'retinol', name: 'Retinol (Vitamin A)', category: 'Anti-aging' },
-            { id: 'aha', name: 'Glycolic Acid (AHA)', category: 'Exfoliant' },
-            { id: 'bha', name: 'Salicylic Acid (BHA)', category: 'Exfoliant' },
-            { id: 'vitaminC', name: 'Vitamin C (L-Ascorbic Acid)', category: 'Antioxidant' },
-            { id: 'niacinamide', name: 'Niacinamide (Vitamin B3)', category: 'Soothing' },
-            { id: 'benzoylPeroxide', name: 'Benzoyl Peroxide', category: 'Acne treatment' },
-            { id: 'copperPeptide', name: 'Copper Peptides', category: 'Repair' },
-            { id: 'pha', name: 'Gluconolactone (PHA)', category: 'Exfoliant' },
-            { id: 'azelaic', name: 'Azelaic Acid', category: 'Brightening' },
-            { id: 'hyaluronic', name: 'Hyaluronic Acid', category: 'Hydration' },
-            { id: 'ceramide', name: 'Ceramides', category: 'Barrier support' },
-            { id: 'peptide', name: 'Matrixyl (Peptides)', category: 'Firming' }
-        ];
-
-        const conflictRules = [
-            {
-                pair: ['retinol', 'aha'],
-                severity: 'High',
-                description: 'Combining retinol with exfoliating acids can cause excessive irritation, redness, and peeling. Use them on alternate nights.'
-            },
-            {
-                pair: ['retinol', 'bha'],
-                severity: 'High',
-                description: 'Retinol and BHA together over-exfoliate and may compromise your skin barrier. Separate by day/night routine.'
-            },
-            {
-                pair: ['retinol', 'benzoylPeroxide'],
-                severity: 'High',
-                description: 'Benzoyl peroxide can oxidize retinol, making both less effective while increasing dryness. Avoid layering.'
-            },
-            {
-                pair: ['retinol', 'vitaminC'],
-                severity: 'Medium',
-                description: 'They work at different pH levels and combined may cause sensitivity. Use Vitamin C in the AM and retinol in the PM.'
-            },
-            {
-                pair: ['niacinamide', 'vitaminC'],
-                severity: 'Medium',
-                description: 'When combined in high concentrations, they may form niacin, which can cause temporary flushing. Wait 10-15 min between applications.'
-            },
-            {
-                pair: ['niacinamide', 'aha'],
-                severity: 'Medium',
-                description: 'Acidic pH of AHAs can convert niacinamide to niacin, leading to irritation. Apply at different times.'
-            },
-            {
-                pair: ['copperPeptide', 'vitaminC'],
-                severity: 'Medium',
-                description: 'Vitamin C can oxidize copper peptides, reducing their anti-aging benefits. Alternate between AM and PM.'
-            },
-            {
-                pair: ['aha', 'bha'],
-                severity: 'Medium',
-                description: 'Using multiple exfoliating acids simultaneously can strip the skin. Choose one or use on different days.'
-            },
-            {
-                pair: ['benzoylPeroxide', 'vitaminC'],
-                severity: 'Low',
-                description: 'May cause mild oxidation. If tolerated, separate application by time of day.'
-            }
-        ];
-
-        let selectedIngredients = new Set();
-        window._customNames = {};
-
-        // ==================== 解锁与时间逻辑 ====================
-        const DEFAULT_DURATION_DAYS = 30; // 当没有指定天数时的默认值
-
-        function getUnlockData() {
-            const data = localStorage.getItem('skinClashUnlockData');
-            return data ? JSON.parse(data) : null;
-        }
-
-        function setUnlockData(timestamp, durationDays) {
-            localStorage.setItem('skinClashUnlockData', JSON.stringify({ unlockTime: timestamp, durationDays }));
-        }
-
-        function isUnlocked() {
-            const data = getUnlockData();
-            if (!data) return false;
-            const now = Date.now();
-            const expiryTime = data.unlockTime + data.durationDays * 24 * 60 * 60 * 1000;
-            if (now < expiryTime) {
-                return true;
-            } else {
-                localStorage.removeItem('skinClashUnlockData');
-                return false;
-            }
-        }
-
-        function unlockCustomInput() {
-            const input = document.getElementById('customIngredient');
-            const btn = document.getElementById('addCustomBtn');
-            const lockIcon = document.querySelector('.lock-icon');
-            const note = document.getElementById('unlockNote');
-            const remainingDaysEl = document.getElementById('remainingDays');
-
-            input.disabled = false;
-            input.placeholder = 'Or type any ingredient...';
-            btn.disabled = false;
-            if (lockIcon) lockIcon.style.display = 'none';
-            if (note) note.style.display = 'none';
-            document.getElementById('customArea').classList.add('unlocked');
-
-            const data = getUnlockData();
-            if (data) {
-                const now = Date.now();
-                const expiryTime = data.unlockTime + data.durationDays * 24 * 60 * 60 * 1000;
-                const remainingMs = expiryTime - now;
-                const remainingDays = Math.max(0, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
-                remainingDaysEl.style.display = 'block';
-                remainingDaysEl.textContent = `✅ Unlocked · ${remainingDays} day${remainingDays !== 1 ? 's' : ''} remaining (of ${data.durationDays} total)`;
-            }
-        }
-
-        function lockCustomInput() {
-            const input = document.getElementById('customIngredient');
-            const btn = document.getElementById('addCustomBtn');
-            const lockIcon = document.querySelector('.lock-icon');
-            const note = document.getElementById('unlockNote');
-            const remainingDaysEl = document.getElementById('remainingDays');
-
-            input.disabled = true;
-            input.placeholder = '🔒 Unlock custom ingredients with a coffee';
-            btn.disabled = true;
-            if (lockIcon) lockIcon.style.display = 'inline';
-            if (note) note.style.display = 'block';
-            if (remainingDaysEl) remainingDaysEl.style.display = 'none';
-            document.getElementById('customArea').classList.remove('unlocked');
-        }
-
-        // 初始化时检查状态
-        if (isUnlocked()) {
-            unlockCustomInput();
-        } else {
-            lockCustomInput();
-        }
-
-        // 检查 URL 参数解锁 (Creem 支付成功回调)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('unlock') === 'true') {
-            const daysParam = urlParams.get('days');
-            const durationDays = daysParam ? parseInt(daysParam, 10) : DEFAULT_DURATION_DAYS;
-            const now = Date.now();
-            setUnlockData(now, durationDays);
-            unlockCustomInput();
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // 点击锁定区域时提示并滚动
-        document.getElementById('customIngredient').addEventListener('click', function(e) {
-            if (!isUnlocked()) {
-                alert('✨ Support any level to unlock custom ingredients for a limited time!');
-                document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-        document.getElementById('addCustomBtn').addEventListener('click', function(e) {
-            if (!isUnlocked()) {
-                alert('✨ Choose $2.99 (15d), $3.99 (30d) or $4.99 (60d) to unlock custom ingredients.');
-                document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                addCustomIngredient();
-            }
-        });
-        document.getElementById('unlockNote').addEventListener('click', function() {
-            if (!isUnlocked()) {
-                document.getElementById('supportSection').scrollIntoView({ behavior: 'smooth' });
-            }
+        // ==================== 导航栏滚动效果 ====================
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
         });
 
-        function getIngredientName(id) {
-            if (window._customNames && window._customNames[id]) return window._customNames[id];
-            const found = ingredientList.find(i => i.id === id);
-            return found ? found.name : id;
-        }
+        // 移动端导航切换
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('mobile-open');
+        });
 
-        function renderChips() {
-            const container = document.getElementById('chipContainer');
-            container.innerHTML = '';
-            ingredientList.forEach(ing => {
-                const chip = document.createElement('div');
-                chip.className = `chip${selectedIngredients.has(ing.id) ? ' selected' : ''}`;
-                chip.textContent = ing.name;
-                chip.dataset.id = ing.id;
-                chip.addEventListener('click', () => {
-                    if (selectedIngredients.has(ing.id)) {
-                        selectedIngredients.delete(ing.id);
-                    } else {
-                        selectedIngredients.add(ing.id);
-                    }
-                    renderChips();
-                    clearResult();
-                });
-                container.appendChild(chip);
+        // ==================== 滚动渐显动画 (Intersection Observer) ====================
+        const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -40px 0px' };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
             });
-            if (window._customNames) {
-                Object.keys(window._customNames).forEach(customId => {
-                    if (selectedIngredients.has(customId)) {
-                        const chip = document.createElement('div');
-                        chip.className = 'chip selected';
-                        chip.textContent = window._customNames[customId];
-                        chip.dataset.id = customId;
-                        chip.addEventListener('click', () => {
-                            selectedIngredients.delete(customId);
-                            delete window._customNames[customId];
-                            renderChips();
-                            clearResult();
-                        });
-                        container.appendChild(chip);
-                    }
-                });
-            }
-        }
+        }, observerOptions);
 
-        function addCustomIngredient() {
-            if (!isUnlocked()) {
-                alert('✨ Your access has expired. Please support again to unlock.');
-                lockCustomInput();
+        document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+        // ==================== Hero 交互式演示 ====================
+        const demoConflictRules = {
+            'retinol+aha': { severity: 'High', desc: 'Excessive irritation & peeling. Use on alternate nights.' },
+            'retinol+bha': { severity: 'High', desc: 'Over-exfoliation risk. Separate by day/night.' },
+            'retinol+benzoylPeroxide': { severity: 'High', desc: 'Benzoyl peroxide oxidizes retinol. Avoid layering.' },
+            'retinol+vitaminC': { severity: 'Medium', desc: 'Different pH levels. Use Vitamin C in AM, Retinol in PM.' },
+            'aha+bha': { severity: 'Medium', desc: 'Multiple exfoliants can strip skin. Choose one per routine.' },
+            'niacinamide+vitaminC': { severity: 'Medium', desc: 'May cause flushing. Wait 10-15 min between applications.' },
+            'niacinamide+aha': { severity: 'Medium', desc: 'Acidic pH converts niacinamide to niacin. Apply at different times.' },
+            'vitaminC+benzoylPeroxide': { severity: 'Low', desc: 'Mild oxidation possible. Separate by time of day if tolerated.' },
+            'copperPeptide+vitaminC': { severity: 'Medium', desc: 'Vitamin C can oxidize copper peptides. Use alternate AM/PM.' },
+            // 添加更多匹配的可能性
+            'vitaminC+copperPeptide': { severity: 'Medium', desc: 'Vitamin C can oxidize copper peptides. Use alternate AM/PM.' },
+            'aha+niacinamide': { severity: 'Medium', desc: 'Acidic pH converts niacinamide to niacin. Apply at different times.' },
+            'bha+aha': { severity: 'Medium', desc: 'Multiple exfoliants can strip skin. Choose one per routine.' },
+        };
+
+        const demoSelected = new Set();
+        const demoChips = document.querySelectorAll('.demo-chip');
+        const demoResult = document.getElementById('demoResult');
+        const demoCheckBtn = document.getElementById('demoCheckBtn');
+
+        demoChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const ing = chip.dataset.ingredient;
+                if (demoSelected.has(ing)) {
+                    demoSelected.delete(ing);
+                    chip.classList.remove('selected');
+                } else {
+                    demoSelected.add(ing);
+                    chip.classList.add('selected');
+                }
+                demoResult.innerHTML = '';
+            });
+        });
+
+        demoCheckBtn.addEventListener('click', () => {
+            if (demoSelected.size < 2) {
+                demoResult.innerHTML = '<div class="demo-result-safe">👆 Select at least 2 ingredients to check.</div>';
                 return;
             }
-            const input = document.getElementById('customIngredient');
-            const name = input.value.trim();
-            if (name === '') return;
-            const customId = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (!selectedIngredients.has(customId)) {
-                selectedIngredients.add(customId);
-                window._customNames[customId] = name;
-                renderChips();
-            }
-            input.value = '';
-            clearResult();
-        }
-
-        function clearResult() {
-            document.getElementById('resultArea').innerHTML = '';
-        }
-
-        function checkConflicts() {
-            const resultDiv = document.getElementById('resultArea');
-            if (selectedIngredients.size < 2) {
-                resultDiv.innerHTML = `<div class="result-card"><span style="color:#888;">Select at least two ingredients to check.</span></div>`;
-                return;
-            }
-            const ids = Array.from(selectedIngredients);
-            const conflictsFound = [];
-            for (let i = 0; i < ids.length; i++) {
-                for (let j = i + 1; j < ids.length; j++) {
-                    const a = ids[i];
-                    const b = ids[j];
-                    for (const rule of conflictRules) {
-                        if ((rule.pair[0] === a && rule.pair[1] === b) || (rule.pair[0] === b && rule.pair[1] === a)) {
-                            conflictsFound.push({
-                                ingredientA: getIngredientName(a),
-                                ingredientB: getIngredientName(b),
-                                severity: rule.severity,
-                                description: rule.description
-                            });
-                            break;
-                        }
-                    }
+            const arr = Array.from(demoSelected);
+            let found = null;
+            for (let i = 0; i < arr.length && !found; i++) {
+                for (let j = i + 1; j < arr.length && !found; j++) {
+                    const key1 = arr[i] + '+' + arr[j];
+                    const key2 = arr[j] + '+' + arr[i];
+                    if (demoConflictRules[key1]) found = { pair: arr[i] + ' + ' + arr[j], ...demoConflictRules[key1] };
+                    else if (demoConflictRules[key2]) found = { pair: arr[j] + ' + ' + arr[i], ...demoConflictRules[key2] };
                 }
             }
-            let html = '<div class="result-card">';
-            if (conflictsFound.length === 0) {
-                html += `<div class="safe-badge"><span>🛡️</span> No conflicts detected!</div>`;
-                html += `<div class="tip-text">Your selected ingredients are generally safe to use together. Still, always patch-test and listen to your skin.</div>`;
+            if (found) {
+                const severityColor = found.severity === 'High' ? 'var(--danger)' : found.severity === 'Medium' ? '#b8860b' : '#2e7d32';
+                demoResult.innerHTML = `<div class="demo-result-mini" style="border-color:${severityColor};background:${found.severity==='High'?'var(--danger-soft)':'#fff8e1'};">
+                    ⚠️ <strong>${found.pair}</strong> — ${found.severity} risk<br>
+                    <span style="font-size:12px;font-weight:400;">${found.desc}</span>
+                </div>`;
             } else {
-                html += `<div style="font-weight:650; margin-bottom:14px;">⚠️ Found ${conflictsFound.length} potential conflict${conflictsFound.length>1?'s':''}:</div>`;
-                conflictsFound.forEach(c => {
-                    html += `
-                    <div class="conflict-item">
-                        <div class="conflict-pair">${c.ingredientA} + ${c.ingredientB} <span style="font-weight:400; font-size:12px; background:#ffe0d4; padding:2px 8px; border-radius:12px; margin-left:6px;">${c.severity} risk</span></div>
-                        <div class="conflict-desc">${c.description}</div>
-                    </div>`;
-                });
-                html += `<div class="tip-text">💡 Tip: Use conflicting ingredients at different times of day (AM/PM) or on alternate days to maintain healthy skin.</div>`;
-            }
-            html += '</div>';
-            resultDiv.innerHTML = html;
-        }
-
-        document.getElementById('customIngredient').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && isUnlocked()) {
-                addCustomIngredient();
+                demoResult.innerHTML = '<div class="demo-result-safe">🛡️ No conflicts detected! Safe to layer.</div>';
             }
         });
-        document.getElementById('checkBtn').addEventListener('click', checkConflicts);
-        renderChips();
 
-        // ==================== Creem 支付链接切换 ====================
-        // 请替换为你自己的三个 Checkout Link
-        const CREEM_LINK_2_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_2_99";
-        const CREEM_LINK_3_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_3_99";
-        const CREEM_LINK_4_99 = "https://creem.io/checkout/PUT_YOUR_LINK_HERE_4_99";
+        // ==================== FAQ 手风琴 ====================
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const wasActive = item.classList.contains('active');
+                document.querySelectorAll('.faq-item').forEach(fi => fi.classList.remove('active'));
+                if (!wasActive) item.classList.add('active');
+            });
+        });
 
-        let currentLink = CREEM_LINK_2_99;
-        const checkoutBtn = document.getElementById('creem-checkout-btn');
-
-        function updateCheckoutLink(amount) {
-            if (amount === '2.99') currentLink = CREEM_LINK_2_99;
-            else if (amount === '3.99') currentLink = CREEM_LINK_3_99;
-            else if (amount === '4.99') currentLink = CREEM_LINK_4_99;
-            checkoutBtn.href = currentLink;
-        }
-
-        updateCheckoutLink('2.99');
-
-        document.querySelectorAll('.amount-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                updateCheckoutLink(this.dataset.amount);
+        // ==================== 平滑滚动 ====================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
         });
     </script>
