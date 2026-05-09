@@ -91,6 +91,7 @@
         .bento-icon.red { background:var(--danger-soft); color:var(--danger); }
         .bento-icon.purple { background:#f0ecf5; color:#8b7aa1; }
         .bento-icon.amber { background:#faf3e5; color:#c9a96e; }
+        .bento-icon.brown { background:#f5f0e8; color:#b8956a; }
         .bento-card h3 { font-size:18px; font-weight:650; margin-bottom:8px; }
         .bento-card p { font-size:14px; color:var(--text-light); line-height:1.6; }
         .conflict-table { width:100%; border-spacing:0 8px; }
@@ -183,16 +184,6 @@
                     <button class="demo-check-btn" id="demoCheckBtn">⚡ Check All Conflicts</button>
                     <span class="demo-trust"><i class="fas fa-shield-halved"></i> All pairs scanned</span>
                 </div>
-                <!-- 支付按钮 -->
-                <div style="text-align:center; margin-top:20px; border-top:1px dashed var(--border); padding-top:16px;">
-                    <p style="font-size:14px; color:var(--text-light); margin-bottom:10px;">💚 Unlock custom input via Creem</p>
-                    <div class="amount-buttons" style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
-                        <button class="amount-btn active" data-amount="2.99" data-link="https://creem.io/checkout/YOUR_LINK_2_99">$2.99</button>
-                        <button class="amount-btn" data-amount="3.99" data-link="https://creem.io/checkout/YOUR_LINK_3_99">$3.99</button>
-                        <button class="amount-btn" data-amount="4.99" data-link="https://creem.io/checkout/YOUR_LINK_4_99">$4.99</button>
-                    </div>
-                    <a id="creem-pay-btn" href="https://creem.io/checkout/YOUR_LINK_2_99" target="_blank" class="btn btn-primary" style="background:#4f46e5;">💳 Support & Unlock</a>
-                </div>
             </div>
         </div>
     </div>
@@ -206,6 +197,15 @@
             <div class="bento-card fade-in-up"><div class="bento-icon red"><i class="fas fa-bolt"></i></div><h3>Instant Full Scan</h3><p>Select all your actives at once. SkinClash scans <strong>every possible pair</strong> and lists all conflicts in seconds — not just the first match.</p></div>
             <div class="bento-card fade-in-up"><div class="bento-icon purple"><i class="fas fa-magnifying-glass"></i></div><h3>Smart autocomplete</h3><p>Fuzzy search (Fuse.js) with INCI aliases ensures you always select the correct ingredient.</p></div>
             <div class="bento-card fade-in-up"><div class="bento-icon amber"><i class="fas fa-shield-halved"></i></div><h3>100% Private</h3><p>All checks run locally. No data leaves your browser.</p></div>
+            <div class="bento-card fade-in-up">
+                <div class="bento-icon brown"><i class="fas fa-users"></i></div>
+                <h3>Who's It For</h3>
+                <p style="font-size:14px; color:var(--text-light); line-height:1.6;">
+                    <strong>🧴 Skincare newbies</strong> — Learn what not to mix.<br>
+                    <strong>🔬 Routine stackers</strong> — Audit your 5+ serum lineup.<br>
+                    <strong>🎥 Beauty creators</strong> — Answer follower questions instantly.
+                </p>
+            </div>
         </div>
     </div>
 </section>
@@ -263,7 +263,6 @@
 </footer>
 
 <script>
-    // Navigation & scroll effects
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 20));
     document.getElementById('navToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('mobile-open'));
@@ -290,7 +289,7 @@
         conflictMap[r.pair[1]+'+'+r.pair[0]] = r;
     });
 
-    // ---------- DEMO LOGIC (with custom ingredients) ----------
+    // ---------- DEMO LOGIC ----------
     const demoSelected = new Set();
     document.querySelectorAll('.demo-chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -301,7 +300,6 @@
         });
     });
 
-    // Custom ingredient handling (locked by default)
     const customInput = document.getElementById('customIngredient');
     const addBtn = document.getElementById('addCustomBtn');
     const unlockNote = document.getElementById('unlockNote');
@@ -315,30 +313,26 @@
     }
     if(isUnlocked()) unlockUI();
 
-    // Handle click on locked input/button
     customInput.addEventListener('click', () => {
         if(!isUnlocked()) alert('✨ Support any amount to unlock custom ingredients!');
     });
     addBtn.addEventListener('click', () => {
-        if(!isUnlocked()) return alert('✨ Unlock custom ingredients by supporting below.');
+        if(!isUnlocked()) return alert('✨ Unlock custom ingredients by supporting in the Pricing section below.');
         const text = customInput.value.trim();
         if(text) { addCustomIngredient(text); customInput.value = ''; }
     });
     unlockNote.addEventListener('click', () => {
-        if(!isUnlocked()) window.scrollTo({ top: document.getElementById('pricing').offsetTop, behavior: 'smooth' });
+        if(!isUnlocked()) {
+            document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+        }
     });
 
     function addCustomIngredient(name){
-        // Add as custom chip (simplified: directly add to selected set with custom ID)
         const id = 'custom_'+name.toLowerCase().replace(/[^a-z0-9]/g,'');
         if(!demoSelected.has(id)){
             demoSelected.add(id);
-            // Store name for display
             window._customNames = window._customNames || {};
             window._customNames[id] = name;
-            // Render a chip dynamically (optional) — for now, just add to set
-            // Also store in map for conflict checks? Custom ingredients have no rules, so just included in scan with no matches.
-            // But they are ignored in conflict lookups, which is fine.
         }
     }
 
@@ -368,29 +362,15 @@
         resultDiv.innerHTML = html;
     });
 
-    // Amount buttons & Creem link
-    const amountBtns = document.querySelectorAll('.amount-btn');
-    const creemPayBtn = document.getElementById('creem-pay-btn');
-    amountBtns.forEach(btn => {
-        btn.addEventListener('click', function(){
-            amountBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const link = this.dataset.link;
-            if(link) creemPayBtn.href = link;
-            // Update Creem pay button text if desired
-        });
-    });
-
-    // Auto-unlock via Creem success URL parameter ?unlock=true&days=30 etc.
+    // Auto-unlock via Creem success URL
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('unlock') === 'true'){
         localStorage.setItem('skinClashUnlocked', 'true');
         unlockUI();
-        // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // Autocomplete (Fuse.js) for custom input
+    // Autocomplete
     const ingredientDB = [
         { id:'retinol', name:'Retinol', aliases:['Vitamin A','Tretinoin'] },
         { id:'aha', name:'Glycolic Acid (AHA)', aliases:['AHA','alpha hydroxy acid'] },
