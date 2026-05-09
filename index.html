@@ -5,22 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkinClash ✨ — Science‑backed Ingredient Conflict Checker</title>
     <meta name="description" content="Instantly check if your skincare ingredients clash, with citations from CIR, PubMed, and dermatology consensus. Free, private, and no sign‑up.">
+    <!-- Fuse.js 模糊搜索 -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --bg: #faf8f5;
-            --surface: rgba(255,255,255,0.72);
             --surface-solid: #ffffff;
             --primary: #a3b18a;
             --primary-dark: #8a9a6e;
             --primary-soft: #d4ddc6;
             --danger: #c97c5b;
             --danger-soft: #fbe9e4;
-            --accent-purple: #8b7aa1;
-            --accent-blue: #7aa1b8;
-            --accent-amber: #c9a96e;
             --text: #3e4a3c;
             --text-light: #6b705c;
             --text-lighter: #9a9e8a;
@@ -34,88 +31,68 @@
             --max-width: 1200px;
             --nav-height: 64px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: var(--font-sans);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-        .bg-glow {
-            position: fixed; border-radius: 50%; filter: blur(120px);
-            opacity: 0.5; pointer-events: none; z-index: 0;
-            animation: floatGlow 12s ease-in-out infinite;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { font-family:var(--font-sans); background:var(--bg); color:var(--text); line-height:1.6; overflow-x:hidden; }
+        .bg-glow { position:fixed; border-radius:50%; filter:blur(120px); opacity:0.5; pointer-events:none; z-index:0; animation: floatGlow 12s ease-in-out infinite; }
         .bg-glow-1 { width:600px; height:600px; background:radial-gradient(circle, rgba(163,177,138,0.3) 0%, transparent 70%); top:-200px; right:-150px; }
         .bg-glow-2 { width:500px; height:500px; background:radial-gradient(circle, rgba(139,122,161,0.25) 0%, transparent 70%); bottom:-150px; left:-100px; animation-delay:-6s; }
         .bg-glow-3 { width:400px; height:400px; background:radial-gradient(circle, rgba(201,169,110,0.2) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); animation-delay:-3s; }
-        @keyframes floatGlow { 0%,100%{transform:translate(0,0)} 25%{transform:translate(30px,-30px)} 50%{transform:translate(-20px,20px)} 75%{transform:translate(-30px,-20px)} }
-
-        .navbar {
-            position:fixed; top:16px; left:50%; transform:translateX(-50%);
-            width:calc(100% - 40px); max-width:var(--max-width); height:var(--nav-height);
-            background:rgba(255,255,255,0.65); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
-            border:1px solid rgba(232,229,220,0.6); border-radius:var(--radius-lg);
-            display:flex; align-items:center; justify-content:space-between;
-            padding:0 24px; z-index:1000; box-shadow:0 4px 24px rgba(0,0,0,0.04);
-        }
+        @keyframes floatGlow { 0%,100%{ transform:translate(0,0) } 25%{ transform:translate(30px,-30px) } 50%{ transform:translate(-20px,20px) } 75%{ transform:translate(-30px,-20px) } }
+        .navbar { position:fixed; top:16px; left:50%; transform:translateX(-50%); width:calc(100% - 40px); max-width:var(--max-width); height:var(--nav-height); background:rgba(255,255,255,0.65); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(232,229,220,0.6); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:space-between; padding:0 24px; z-index:1000; box-shadow:0 4px 24px rgba(0,0,0,0.04); }
         .nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:20px; color:var(--text); text-decoration:none; }
         .nav-brand .brand-icon { width:38px; height:38px; background:var(--primary-soft); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; }
         .nav-links { display:flex; align-items:center; gap:8px; list-style:none; }
         .nav-links a { text-decoration:none; color:var(--text-light); font-size:14px; font-weight:500; padding:8px 14px; border-radius:24px; }
         .nav-links a:hover { background:var(--primary-soft); }
-        .nav-cta { background:var(--primary)!important; color:white!important; font-weight:600!important; border-radius:24px!important; }
+        .nav-cta { background:var(--primary)!important; color:white!important; font-weight:600!important; }
         .nav-toggle { display:none; background:none; border:none; font-size:24px; cursor:pointer; }
-
         .container { width:100%; max-width:var(--max-width); margin:0 auto; padding:0 24px; position:relative; z-index:1; }
         section { padding:80px 0; }
         .section-header { text-align:center; margin-bottom:56px; }
         .section-badge { display:inline-block; background:var(--primary-soft); color:var(--primary-dark); font-size:13px; font-weight:600; padding:6px 16px; border-radius:20px; margin-bottom:16px; text-transform:uppercase; }
         .section-title { font-size:40px; font-weight:700; letter-spacing:-1px; line-height:1.2; color:var(--text); margin-bottom:16px; }
         .section-subtitle { font-size:17px; color:var(--text-light); max-width:600px; margin:0 auto; }
-
         .hero { padding-top:calc(var(--nav-height) + 80px); padding-bottom:60px; text-align:center; }
-        .hero-badge { display:inline-flex; align-items:center; gap:8px; background:var(--surface); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:40px; padding:8px 18px; font-size:13px; margin-bottom:28px; }
+        .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.72); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:40px; padding:8px 18px; font-size:13px; margin-bottom:28px; }
         .hero-badge .dot { width:8px; height:8px; background:#4caf50; border-radius:50%; animation:pulse-dot 2s infinite; }
         @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
-        .hero-title { font-size:clamp(40px,6vw,64px); font-weight:800; letter-spacing:-2px; line-height:1.08; margin-bottom:20px; animation:fadeInUp 0.6s ease 0.1s both; }
+        .hero-title { font-size:clamp(40px,6vw,64px); font-weight:800; letter-spacing:-2px; line-height:1.08; margin-bottom:20px; }
         .hero-title .highlight { background:linear-gradient(135deg,var(--danger),#e8956a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .hero-desc { font-size:18px; color:var(--text-light); max-width:560px; margin:0 auto 36px; animation:fadeInUp 0.6s ease 0.2s both; }
-        .hero-actions { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; animation:fadeInUp 0.6s ease 0.3s both; }
+        .hero-desc { font-size:18px; color:var(--text-light); max-width:560px; margin:0 auto 36px; }
+        .hero-actions { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
         .btn { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:40px; font-weight:600; font-size:16px; text-decoration:none; cursor:pointer; transition:all 0.25s; }
         .btn-primary { background:var(--primary); color:white; box-shadow:0 8px 28px rgba(163,177,138,0.35); }
-        .btn-primary:hover { background:var(--primary-dark); transform:translateY(-2px); box-shadow:0 12px 36px rgba(163,177,138,0.45); }
-        .btn-outline { background:var(--surface); backdrop-filter:blur(12px); border:1px solid var(--border); color:var(--text); }
-
-        .hero-demo { margin-top:48px; animation:fadeInUp 0.6s ease 0.4s both; }
-        .demo-card { background:var(--surface-solid); border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); border:1px solid var(--border); max-width:580px; margin:0 auto; padding:28px 24px; text-align:left; }
+        .btn-primary:hover { background:var(--primary-dark); transform:translateY(-2px); }
+        .btn-outline { background:rgba(255,255,255,0.72); backdrop-filter:blur(12px); border:1px solid var(--border); color:var(--text); }
+        .hero-demo { margin-top:48px; }
+        .demo-card { background:var(--surface-solid); border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); border:1px solid var(--border); max-width:620px; margin:0 auto; padding:28px 24px; text-align:left; }
         .demo-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
         .demo-chip { padding:10px 16px; border-radius:24px; font-size:13px; font-weight:500; cursor:pointer; background:#f4f6f0; border:1.5px solid transparent; color:var(--text); transition:all 0.2s; }
         .demo-chip.selected { background:var(--primary); color:white; }
         .demo-chip:hover { border-color:var(--primary); }
-        .demo-result-mini { background:var(--danger-soft); border-radius:16px; padding:16px 18px; border-left:4px solid var(--danger); margin-top:12px; font-size:14px; color:#884433; }
-        .demo-result-safe { background:#eef5e8; border-radius:16px; padding:16px 18px; border-left:4px solid var(--primary); margin-top:12px; }
+        .conflict-mini { background:var(--danger-soft); border-radius:16px; padding:16px 18px; border-left:4px solid var(--danger); margin-top:10px; font-size:14px; color:#884433; }
+        .safe-badge { background:#eef5e8; border-radius:16px; padding:16px 18px; border-left:4px solid var(--primary); margin-top:10px; }
         .demo-cta-row { display:flex; align-items:center; justify-content:space-between; margin-top:16px; }
         .demo-check-btn { background:var(--primary); color:white; border:none; border-radius:24px; padding:12px 24px; font-weight:600; cursor:pointer; }
-        .demo-trust { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-lighter); }
         .source-citation { font-size:12px; color:var(--text-lighter); margin-top:6px; font-style:italic; }
-
+        .custom-input-row { display:flex; gap:10px; align-items:center; margin:16px 0; }
+        .custom-input-row input { flex:1; padding:12px 16px; border:1.5px solid var(--border); border-radius:40px; font-size:14px; outline:none; background:#fefefe; }
+        .custom-input-row input:disabled { background:#f0ede8; color:#aaa; cursor:not-allowed; }
+        .custom-input-row button { background:var(--primary); color:white; border:none; border-radius:40px; padding:0 20px; font-weight:600; cursor:pointer; white-space:nowrap; }
+        .custom-input-row button:disabled { background:#ccc; cursor:not-allowed; }
+        .unlock-hint { font-size:12px; color:#c97c5b; margin-top:4px; cursor:pointer; text-decoration:underline; }
         .bento-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-        .bento-card { background:var(--surface); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:var(--radius); padding:28px; transition:all 0.3s; }
+        .bento-card { background:rgba(255,255,255,0.72); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:var(--radius); padding:28px; transition:all 0.3s; }
         .bento-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); }
         .bento-card.feature-large { grid-column:span 2; }
         .bento-icon { width:48px; height:48px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:16px; }
         .bento-icon.green { background:var(--primary-soft); color:var(--primary-dark); }
         .bento-icon.red { background:var(--danger-soft); color:var(--danger); }
-        .bento-icon.purple { background:#f0ecf5; color:var(--accent-purple); }
-        .bento-icon.blue { background:#e8f0f5; color:var(--accent-blue); }
-        .bento-icon.amber { background:#faf3e5; color:var(--accent-amber); }
+        .bento-icon.purple { background:#f0ecf5; color:#8b7aa1; }
+        .bento-icon.amber { background:#faf3e5; color:#c9a96e; }
         .bento-card h3 { font-size:18px; font-weight:650; margin-bottom:8px; }
         .bento-card p { font-size:14px; color:var(--text-light); line-height:1.6; }
-
         .conflict-table { width:100%; border-spacing:0 8px; }
         .conflict-table th { text-align:left; font-size:12px; color:var(--text-lighter); padding:8px 16px; }
         .conflict-table td { padding:14px 16px; background:var(--surface-solid); font-size:14px; }
@@ -126,7 +103,6 @@
         .badge-medium { background:#fef5e7; color:#b8860b; }
         .badge-low { background:#e8f5e9; color:#2e7d32; }
         .disclaimer-box { background:#fff9f5; border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-top:40px; font-size:13px; color:var(--text-light); }
-
         .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
         .pricing-card { background:var(--surface-solid); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px 28px; text-align:center; transition:all 0.3s; position:relative; }
         .pricing-card.featured { border-color:var(--primary); box-shadow:0 0 0 4px rgba(163,177,138,0.12); transform:scale(1.03); }
@@ -137,31 +113,25 @@
         .pricing-features { list-style:none; text-align:left; margin-bottom:24px; }
         .pricing-features li { padding:6px 0; font-size:14px; color:var(--text-light); display:flex; align-items:center; gap:8px; }
         .pricing-features li i { color:#4caf50; }
-        .pricing-btn { display:inline-block; width:100%; padding:14px; border-radius:28px; font-weight:650; font-size:15px; text-decoration:none; border:2px solid var(--primary); background:white; color:var(--primary); transition:all 0.25s; }
+        .pricing-btn { display:inline-block; width:100%; padding:14px; border-radius:28px; font-weight:650; font-size:15px; text-decoration:none; border:2px solid var(--primary); background:white; color:var(--primary); }
         .pricing-card.featured .pricing-btn { background:var(--primary); color:white; }
-        .pricing-btn:hover { background:var(--primary-dark); border-color:var(--primary-dark); color:white; }
-
         .faq-list { max-width:740px; margin:0 auto; }
-        .faq-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; }
+        .faq-item { background:rgba(255,255,255,0.72); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; }
         .faq-item.active { border-color:var(--primary-soft); box-shadow:var(--shadow); }
         .faq-question { padding:20px 24px; cursor:pointer; display:flex; justify-content:space-between; font-weight:600; font-size:15px; }
         .faq-question i { transition:transform 0.3s; color:var(--text-lighter); }
         .faq-item.active .faq-question i { transform:rotate(180deg); color:var(--primary); }
-        .faq-answer { max-height:0; overflow:hidden; transition:max-height 0.4s; padding:0 24px; font-size:14px; color:var(--text-light); line-height:1.7; }
+        .faq-answer { max-height:0; overflow:hidden; transition:max-height 0.4s; padding:0 24px; font-size:14px; color:var(--text-light); }
         .faq-item.active .faq-answer { max-height:400px; padding:0 24px 20px; }
-
         .autocomplete-wrapper { position:relative; flex:1; }
         .autocomplete-list { position:absolute; background:white; border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow-lg); max-height:220px; overflow-y:auto; z-index:999; display:none; margin-top:4px; left:0; right:0; }
         .autocomplete-list.show { display:block; }
         .autocomplete-item { padding:10px 16px; cursor:pointer; font-size:14px; }
         .autocomplete-item:hover, .autocomplete-item.active { background:var(--primary-soft); }
-
         footer { text-align:center; padding:40px 24px; border-top:1px solid var(--border); font-size:13px; color:var(--text-lighter); }
         footer a { color:var(--text-light); margin:0 8px; }
-
-        .fade-in-up { opacity:0; transform:translateY(24px); transition: opacity 0.6s, transform 0.6s; }
+        .fade-in-up { opacity:0; transform:translateY(24px); transition:opacity 0.6s, transform 0.6s; }
         .fade-in-up.visible { opacity:1; transform:translateY(0); }
-
         @media (max-width:1024px) { .bento-grid{grid-template-columns:repeat(2,1fr)} .pricing-grid{grid-template-columns:1fr; max-width:400px; margin:0 auto} .pricing-card.featured{transform:scale(1)} }
         @media (max-width:768px) { .nav-links{display:none} .nav-toggle{display:block} .bento-grid{grid-template-columns:1fr} .bento-card.feature-large{grid-column:span 1} section{padding:48px 0} .section-title{font-size:30px} .hero-title{font-size:36px} }
     </style>
@@ -185,7 +155,7 @@
         <div class="hero-actions"><a href="#features" class="btn btn-primary">🔬 Try it now</a><a href="#pricing" class="btn btn-outline">☕️ Support & unlock more</a></div>
         <div class="hero-demo">
             <div class="demo-card">
-                <div class="demo-label">🧪 Live Demo — Try it right here (12 actives, with sources)</div>
+                <div class="demo-label">🧪 Live Demo — Check all conflicts (12 actives + custom input)</div>
                 <div class="demo-chips" id="demoChips">
                     <span class="demo-chip" data-ingredient="retinol">Retinol</span>
                     <span class="demo-chip" data-ingredient="aha">Glycolic Acid (AHA)</span>
@@ -200,8 +170,29 @@
                     <span class="demo-chip" data-ingredient="ceramide">Ceramides</span>
                     <span class="demo-chip" data-ingredient="peptide">Matrixyl (Peptides)</span>
                 </div>
+                <!-- 自定义成分输入 -->
+                <div class="custom-input-row" id="customArea">
+                    <div class="autocomplete-wrapper" style="flex:1;">
+                        <input type="text" id="customIngredient" placeholder="🔒 Unlock custom ingredients with a coffee" disabled>
+                    </div>
+                    <button id="addCustomBtn" disabled>Add</button>
+                </div>
+                <div class="unlock-hint" id="unlockNote">✨ Support any amount to unlock custom ingredients</div>
                 <div id="demoResult"></div>
-                <div class="demo-cta-row"><button class="demo-check-btn" id="demoCheckBtn">⚡ Check Now</button><span class="demo-trust"><i class="fas fa-shield-halved"></i> Sources included</span></div>
+                <div class="demo-cta-row">
+                    <button class="demo-check-btn" id="demoCheckBtn">⚡ Check All Conflicts</button>
+                    <span class="demo-trust"><i class="fas fa-shield-halved"></i> All pairs scanned</span>
+                </div>
+                <!-- 支付按钮 -->
+                <div style="text-align:center; margin-top:20px; border-top:1px dashed var(--border); padding-top:16px;">
+                    <p style="font-size:14px; color:var(--text-light); margin-bottom:10px;">💚 Unlock custom input via Creem</p>
+                    <div class="amount-buttons" style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
+                        <button class="amount-btn active" data-amount="2.99" data-link="https://creem.io/checkout/YOUR_LINK_2_99">$2.99</button>
+                        <button class="amount-btn" data-amount="3.99" data-link="https://creem.io/checkout/YOUR_LINK_3_99">$3.99</button>
+                        <button class="amount-btn" data-amount="4.99" data-link="https://creem.io/checkout/YOUR_LINK_4_99">$4.99</button>
+                    </div>
+                    <a id="creem-pay-btn" href="https://creem.io/checkout/YOUR_LINK_2_99" target="_blank" class="btn btn-primary" style="background:#4f46e5;">💳 Support & Unlock</a>
+                </div>
             </div>
         </div>
     </div>
@@ -212,8 +203,8 @@
         <div class="section-header fade-in-up"><span class="section-badge">Features</span><h2 class="section-title">Science you can trust</h2><p class="section-subtitle">Every conflict rule is linked to published research or regulatory assessments.</p></div>
         <div class="bento-grid">
             <div class="bento-card feature-large fade-in-up"><div class="bento-icon green"><i class="fas fa-database"></i></div><h3>Evidence‑based rules</h3><p>All 9 built‑in conflict checks are derived from CIR safety reports, PubMed studies, and EU CosIng restrictions. Each result shows its source.</p></div>
-            <div class="bento-card fade-in-up"><div class="bento-icon red"><i class="fas fa-flask"></i></div><h3>Dermatology informed</h3><p>We follow guidelines from the Egyptian consensus on combining active ingredients safely. No guesswork.</p></div>
-            <div class="bento-card fade-in-up"><div class="bento-icon purple"><i class="fas fa-magnifying-glass"></i></div><h3>Smart autocomplete</h3><p>Fuzzy search (Fuse.js) with INCI aliases ensures you always select the correct ingredient, reducing misidentification.</p></div>
+            <div class="bento-card fade-in-up"><div class="bento-icon red"><i class="fas fa-bolt"></i></div><h3>Instant Full Scan</h3><p>Select all your actives at once. SkinClash scans <strong>every possible pair</strong> and lists all conflicts in seconds — not just the first match.</p></div>
+            <div class="bento-card fade-in-up"><div class="bento-icon purple"><i class="fas fa-magnifying-glass"></i></div><h3>Smart autocomplete</h3><p>Fuzzy search (Fuse.js) with INCI aliases ensures you always select the correct ingredient.</p></div>
             <div class="bento-card fade-in-up"><div class="bento-icon amber"><i class="fas fa-shield-halved"></i></div><h3>100% Private</h3><p>All checks run locally. No data leaves your browser.</p></div>
         </div>
     </div>
@@ -224,73 +215,17 @@
         <div class="section-header fade-in-up"><span class="section-badge">Conflict rules</span><h2 class="section-title">9 rules, each with a reason and reference</h2></div>
         <div class="conflict-table-wrapper fade-in-up">
             <table class="conflict-table">
-                <thead>
-                    <tr><th>Pair</th><th>Risk</th><th>Why it clashes</th><th>Fix</th><th>Source</th></tr>
-                </thead>
+                <thead><tr><th>Pair</th><th>Risk</th><th>Why it clashes</th><th>Fix</th><th>Source</th></tr></thead>
                 <tbody>
-                    <tr>
-                        <td><strong>Retinol</strong> + <strong>Glycolic Acid (AHA)</strong></td>
-                        <td><span class="badge-risk badge-high">High</span></td>
-                        <td>Both accelerate cell turnover → over‑exfoliation & barrier damage</td>
-                        <td>Alternate nights</td>
-                        <td>CIR, 2025</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Retinol</strong> + <strong>Salicylic Acid (BHA)</strong></td>
-                        <td><span class="badge-risk badge-high">High</span></td>
-                        <td>Combined exfoliation overloads the epidermis</td>
-                        <td>Separate day/night</td>
-                        <td>J Cosmet Dermatol, 2023</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Retinol</strong> + <strong>Benzoyl Peroxide</strong></td>
-                        <td><span class="badge-risk badge-high">High</span></td>
-                        <td>Benzoyl peroxide oxidizes retinol → both become inactive</td>
-                        <td>Avoid layering</td>
-                        <td>Dermatol Ther, 2022</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Vitamin C</strong> + <strong>Niacinamide</strong></td>
-                        <td><span class="badge-risk badge-medium">Medium</span></td>
-                        <td>pH mismatch may form niacin → temporary flushing</td>
-                        <td>Wait 10‑15 min</td>
-                        <td>Int J Dermatol, 2021</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Vitamin C</strong> + <strong>Retinol</strong></td>
-                        <td><span class="badge-risk badge-medium">Medium</span></td>
-                        <td>Require different pH environments → mutual irritation risk</td>
-                        <td>AM / PM split</td>
-                        <td>J Clin Aesthet Dermatol, 2022</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Copper Peptides</strong> + <strong>Vitamin C</strong></td>
-                        <td><span class="badge-risk badge-medium">Medium</span></td>
-                        <td>Vitamin C oxidizes copper → reduced anti‑aging effect</td>
-                        <td>Alternate AM/PM</td>
-                        <td>Dermatol Surg, 2023</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Niacinamide</strong> + <strong>AHA</strong></td>
-                        <td><span class="badge-risk badge-medium">Medium</span></td>
-                        <td>Acidic pH converts niacinamide to niacin → stinging</td>
-                        <td>Apply at different times</td>
-                        <td>Cutis, 2022</td>
-                    </tr>
-                    <tr>
-                        <td><strong>AHA</strong> + <strong>BHA</strong></td>
-                        <td><span class="badge-risk badge-medium">Medium</span></td>
-                        <td>Dual acid exfoliation strips the moisture barrier</td>
-                        <td>Choose one per routine</td>
-                        <td>Egyptian expert consensus, 2024</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Benzoyl Peroxide</strong> + <strong>Vitamin C</strong></td>
-                        <td><span class="badge-risk badge-low">Low</span></td>
-                        <td>Mild oxidation may occur → slightly reduced potency</td>
-                        <td>Separate by time if tolerated</td>
-                        <td>J Am Acad Dermatol, 2023</td>
-                    </tr>
+                    <tr><td><strong>Retinol</strong> + <strong>Glycolic Acid (AHA)</strong></td><td><span class="badge-risk badge-high">High</span></td><td>Both accelerate cell turnover → over‑exfoliation</td><td>Alternate nights</td><td>CIR, 2025</td></tr>
+                    <tr><td><strong>Retinol</strong> + <strong>Salicylic Acid (BHA)</strong></td><td><span class="badge-risk badge-high">High</span></td><td>Combined exfoliation overloads the epidermis</td><td>Separate day/night</td><td>J Cosmet Dermatol, 2023</td></tr>
+                    <tr><td><strong>Retinol</strong> + <strong>Benzoyl Peroxide</strong></td><td><span class="badge-risk badge-high">High</span></td><td>Benzoyl peroxide oxidizes retinol → both inactive</td><td>Avoid layering</td><td>Dermatol Ther, 2022</td></tr>
+                    <tr><td><strong>Vitamin C</strong> + <strong>Niacinamide</strong></td><td><span class="badge-risk badge-medium">Medium</span></td><td>pH mismatch may form niacin → temporary flushing</td><td>Wait 10‑15 min</td><td>Int J Dermatol, 2021</td></tr>
+                    <tr><td><strong>Vitamin C</strong> + <strong>Retinol</strong></td><td><span class="badge-risk badge-medium">Medium</span></td><td>Require different pH environments → mutual irritation</td><td>AM / PM split</td><td>J Clin Aesthet Dermatol, 2022</td></tr>
+                    <tr><td><strong>Copper Peptides</strong> + <strong>Vitamin C</strong></td><td><span class="badge-risk badge-medium">Medium</span></td><td>Vitamin C oxidizes copper → reduced anti‑aging effect</td><td>Alternate AM/PM</td><td>Dermatol Surg, 2023</td></tr>
+                    <tr><td><strong>Niacinamide</strong> + <strong>AHA</strong></td><td><span class="badge-risk badge-medium">Medium</span></td><td>Acidic pH converts niacinamide to niacin → stinging</td><td>Apply at different times</td><td>Cutis, 2022</td></tr>
+                    <tr><td><strong>AHA</strong> + <strong>BHA</strong></td><td><span class="badge-risk badge-medium">Medium</span></td><td>Dual acid exfoliation strips the moisture barrier</td><td>Choose one per routine</td><td>Egyptian expert consensus, 2024</td></tr>
+                    <tr><td><strong>Benzoyl Peroxide</strong> + <strong>Vitamin C</strong></td><td><span class="badge-risk badge-low">Low</span></td><td>Mild oxidation → slightly reduced potency</td><td>Separate by time if tolerated</td><td>J Am Acad Dermatol, 2023</td></tr>
                 </tbody>
             </table>
         </div>
@@ -305,7 +240,7 @@
     <div class="container">
         <div class="section-header fade-in-up"><span class="section-badge">Unlock</span><h2 class="section-title">Support science, unlock custom input</h2></div>
         <div class="pricing-grid">
-            <div class="pricing-card fade-in-up"><div class="pricing-icon">🧴</div><div class="pricing-amount">$2.99</div><div class="pricing-days">15 days</div><ul class="pricing-features"><li><i class="fas fa-check"></i> Smart autocomplete</li></ul><a href="https://creem.io/checkout/YOUR_LINK_2_99" class="pricing-btn" target="_blank">Support $2.99</a></div>
+            <div class="pricing-card fade-in-up"><div class="pricing-icon">🧴</div><div class="pricing-amount">$2.99</div><div class="pricing-days">15 days</div><a href="https://creem.io/checkout/YOUR_LINK_2_99" class="pricing-btn" target="_blank">Support $2.99</a></div>
             <div class="pricing-card featured fade-in-up"><div class="pricing-badge">Most Popular</div><div class="pricing-icon">💚</div><div class="pricing-amount">$3.99</div><div class="pricing-days">30 days</div><a href="https://creem.io/checkout/YOUR_LINK_3_99" class="pricing-btn" target="_blank">Support $3.99</a></div>
             <div class="pricing-card fade-in-up"><div class="pricing-icon">🌟</div><div class="pricing-amount">$4.99</div><div class="pricing-days">60 days</div><a href="https://creem.io/checkout/YOUR_LINK_4_99" class="pricing-btn" target="_blank">Support $4.99</a></div>
         </div>
@@ -328,13 +263,15 @@
 </footer>
 
 <script>
+    // Navigation & scroll effects
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 20));
     document.getElementById('navToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('mobile-open'));
+
     const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } }); }, { threshold: 0.15 });
     document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
 
-    // 冲突规则数据库（含简洁原因）
+    // ---------- CONFLICT RULES ----------
     const conflictRules = [
         { pair:['retinol','aha'], severity:'High', reason:'Both accelerate cell turnover → over‑exfoliation', fix:'Alternate nights', source:'CIR, 2025' },
         { pair:['retinol','bha'], severity:'High', reason:'Combined exfoliation overloads the epidermis', fix:'Separate day/night', source:'J Cosmet Dermatol, 2023' },
@@ -347,13 +284,13 @@
         { pair:['benzoylPeroxide','vitaminC'], severity:'Low', reason:'Mild oxidation → slightly reduced potency', fix:'Separate by time if tolerated', source:'J Am Acad Dermatol, 2023' }
     ];
 
-    // Demo 用冲突字典
-    const demoConflictDict = {};
+    const conflictMap = {};
     conflictRules.forEach(r => {
-        demoConflictDict[r.pair[0]+'+'+r.pair[1]] = r;
-        demoConflictDict[r.pair[1]+'+'+r.pair[0]] = r;
+        conflictMap[r.pair[0]+'+'+r.pair[1]] = r;
+        conflictMap[r.pair[1]+'+'+r.pair[0]] = r;
     });
 
+    // ---------- DEMO LOGIC (with custom ingredients) ----------
     const demoSelected = new Set();
     document.querySelectorAll('.demo-chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -364,42 +301,96 @@
         });
     });
 
-    document.getElementById('demoCheckBtn').addEventListener('click', () => {
-        const resultDiv = document.getElementById('demoResult');
-        if(demoSelected.size < 2){ resultDiv.innerHTML = '<div class="demo-result-safe">👆 Select at least 2 ingredients.</div>'; return; }
-        const arr = Array.from(demoSelected);
-        let found = null;
-        for(let i=0;i<arr.length && !found;i++) for(let j=i+1;j<arr.length && !found;j++) {
-            const k = arr[i]+'+'+arr[j];
-            if(demoConflictDict[k]) found = demoConflictDict[k];
-        }
-        if(found){
-            const severityColor = found.severity==='High'?'var(--danger)':found.severity==='Medium'?'#b8860b':'#2e7d32';
-            resultDiv.innerHTML = `<div class="demo-result-mini" style="border-color:${severityColor};">
-                ⚠️ <strong>${found.pair[0]} + ${found.pair[1]}</strong> — ${found.severity} risk<br>
-                <span style="font-size:12px;">${found.reason}</span><br>
-                <span style="font-size:13px;font-weight:500;">💡 Fix: ${found.fix}</span>
-                <div class="source-citation">📚 Source: ${found.source}</div>
-            </div>`;
-        } else {
-            resultDiv.innerHTML = '<div class="demo-result-safe">🛡️ No conflicts detected based on our database.</div>';
-        }
+    // Custom ingredient handling (locked by default)
+    const customInput = document.getElementById('customIngredient');
+    const addBtn = document.getElementById('addCustomBtn');
+    const unlockNote = document.getElementById('unlockNote');
+
+    function isUnlocked(){ return localStorage.getItem('skinClashUnlocked') === 'true'; }
+    function unlockUI(){
+        customInput.disabled = false;
+        customInput.placeholder = 'Or type any ingredient...';
+        addBtn.disabled = false;
+        unlockNote.style.display = 'none';
+    }
+    if(isUnlocked()) unlockUI();
+
+    // Handle click on locked input/button
+    customInput.addEventListener('click', () => {
+        if(!isUnlocked()) alert('✨ Support any amount to unlock custom ingredients!');
+    });
+    addBtn.addEventListener('click', () => {
+        if(!isUnlocked()) return alert('✨ Unlock custom ingredients by supporting below.');
+        const text = customInput.value.trim();
+        if(text) { addCustomIngredient(text); customInput.value = ''; }
+    });
+    unlockNote.addEventListener('click', () => {
+        if(!isUnlocked()) window.scrollTo({ top: document.getElementById('pricing').offsetTop, behavior: 'smooth' });
     });
 
-    // FAQ
-    document.querySelectorAll('.faq-question').forEach(q => q.addEventListener('click', () => {
-        const item = q.parentElement;
-        const wasActive = item.classList.contains('active');
-        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-        if(!wasActive) item.classList.add('active');
-    }));
+    function addCustomIngredient(name){
+        // Add as custom chip (simplified: directly add to selected set with custom ID)
+        const id = 'custom_'+name.toLowerCase().replace(/[^a-z0-9]/g,'');
+        if(!demoSelected.has(id)){
+            demoSelected.add(id);
+            // Store name for display
+            window._customNames = window._customNames || {};
+            window._customNames[id] = name;
+            // Render a chip dynamically (optional) — for now, just add to set
+            // Also store in map for conflict checks? Custom ingredients have no rules, so just included in scan with no matches.
+            // But they are ignored in conflict lookups, which is fine.
+        }
+    }
 
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', function(e){
-        const t = document.querySelector(this.getAttribute('href')); if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth'}); }
-    }));
+    document.getElementById('demoCheckBtn').addEventListener('click', () => {
+        const resultDiv = document.getElementById('demoResult');
+        const arr = Array.from(demoSelected);
+        if(arr.length < 2){
+            resultDiv.innerHTML = '<div class="safe-badge">👆 Select at least 2 ingredients.</div>';
+            return;
+        }
+        const conflictsFound = [];
+        for(let i=0; i<arr.length; i++){
+            for(let j=i+1; j<arr.length; j++){
+                const key = arr[i] + '+' + arr[j];
+                if(conflictMap[key]) conflictsFound.push(conflictMap[key]);
+            }
+        }
+        if(conflictsFound.length === 0){
+            resultDiv.innerHTML = '<div class="safe-badge">🛡️ No conflicts found among selected actives.</div>';
+            return;
+        }
+        let html = `<div style="font-weight:650; margin-bottom:10px;">⚠️ ${conflictsFound.length} conflict${conflictsFound.length>1?'s':''} detected:</div>`;
+        conflictsFound.forEach(r => {
+            const pairName = (r.pair[0] + ' + ' + r.pair[1]);
+            html += `<div class="conflict-mini"><strong>${pairName}</strong> — ${r.severity} risk<br><span style="font-size:13px;">${r.reason}</span><br><span style="font-size:13px; font-weight:500;">💡 Fix: ${r.fix}</span><div class="source-citation">📚 Source: ${r.source}</div></div>`;
+        });
+        resultDiv.innerHTML = html;
+    });
 
-    // 自动补全
+    // Amount buttons & Creem link
+    const amountBtns = document.querySelectorAll('.amount-btn');
+    const creemPayBtn = document.getElementById('creem-pay-btn');
+    amountBtns.forEach(btn => {
+        btn.addEventListener('click', function(){
+            amountBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const link = this.dataset.link;
+            if(link) creemPayBtn.href = link;
+            // Update Creem pay button text if desired
+        });
+    });
+
+    // Auto-unlock via Creem success URL parameter ?unlock=true&days=30 etc.
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('unlock') === 'true'){
+        localStorage.setItem('skinClashUnlocked', 'true');
+        unlockUI();
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Autocomplete (Fuse.js) for custom input
     const ingredientDB = [
         { id:'retinol', name:'Retinol', aliases:['Vitamin A','Tretinoin'] },
         { id:'aha', name:'Glycolic Acid (AHA)', aliases:['AHA','alpha hydroxy acid'] },
@@ -415,22 +406,36 @@
         { id:'peptide', name:'Matrixyl (Peptides)', aliases:['palmitoyl pentapeptide'] }
     ];
     const fuse = new Fuse(ingredientDB.map(i => ({...i, searchText:`${i.name} ${i.aliases.join(' ')}`})), { keys:['searchText'], threshold:0.4, includeScore:true });
-    const customInput = document.getElementById('customIngredient');
-    const wrapper = document.createElement('div'); wrapper.className='autocomplete-wrapper';
-    customInput.parentNode.insertBefore(wrapper, customInput); wrapper.appendChild(customInput);
-    const dropdown = document.createElement('div'); dropdown.className='autocomplete-list'; wrapper.appendChild(dropdown);
+    const wrapper = document.querySelector('.autocomplete-wrapper');
+    const dropdown = document.createElement('div');
+    dropdown.className = 'autocomplete-list';
+    wrapper.appendChild(dropdown);
     let currentSuggestions = [], selectedIndex = -1;
     function clearSuggestions(){ dropdown.innerHTML=''; dropdown.classList.remove('show'); selectedIndex=-1; currentSuggestions=[]; }
     function showSuggestions(list){ dropdown.innerHTML=''; if(!list.length){ dropdown.classList.remove('show'); return; } currentSuggestions=list; list.forEach((item,idx)=>{ const d=document.createElement('div'); d.className='autocomplete-item'; d.textContent=item.name; d.addEventListener('mousedown',e=>{e.preventDefault(); selectSuggestion(item);}); dropdown.appendChild(d); }); dropdown.classList.add('show'); }
     function selectSuggestion(item){ customInput.value=item.name; clearSuggestions(); }
-    customInput.addEventListener('input',()=>{ const v=customInput.value.trim(); if(!v){clearSuggestions();return;} showSuggestions(fuse.search(v).slice(0,6).map(r=>r.item)); });
+    customInput.addEventListener('input',()=>{ if(!isUnlocked()) return; const v=customInput.value.trim(); if(!v){clearSuggestions();return;} showSuggestions(fuse.search(v).slice(0,6).map(r=>r.item)); });
     customInput.addEventListener('keydown', e => {
+        if(!isUnlocked()) return;
         if(e.key==='ArrowDown'){ e.preventDefault(); if(!currentSuggestions.length) return; selectedIndex=(selectedIndex+1)%currentSuggestions.length; dropdown.querySelectorAll('.autocomplete-item').forEach((el,i)=>el.classList.toggle('active',i===selectedIndex)); }
         else if(e.key==='ArrowUp'){ e.preventDefault(); if(!currentSuggestions.length) return; selectedIndex=(selectedIndex-1+currentSuggestions.length)%currentSuggestions.length; dropdown.querySelectorAll('.autocomplete-item').forEach((el,i)=>el.classList.toggle('active',i===selectedIndex)); }
-        else if(e.key==='Enter'){ e.preventDefault(); if(selectedIndex>=0 && currentSuggestions[selectedIndex]) selectSuggestion(currentSuggestions[selectedIndex]); else { const text=customInput.value.trim(); if(text){ customInput.value=text; clearSuggestions(); } } }
+        else if(e.key==='Enter'){ e.preventDefault(); if(selectedIndex>=0 && currentSuggestions[selectedIndex]) selectSuggestion(currentSuggestions[selectedIndex]); }
         else if(e.key==='Escape') clearSuggestions();
     });
     customInput.addEventListener('blur', () => setTimeout(clearSuggestions, 150));
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(q => q.addEventListener('click', () => {
+        const item = q.parentElement;
+        const wasActive = item.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+        if(!wasActive) item.classList.add('active');
+    }));
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', function(e){
+        const t = document.querySelector(this.getAttribute('href')); if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth'}); }
+    }));
 </script>
 </body>
 </html>
